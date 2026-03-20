@@ -5,6 +5,7 @@ const navItems = [
   { label: 'Dashboard', to: '/' },
   { label: 'My Competitions', to: '/my-competitions' },
   { label: 'Explore Competitions', to: '/competitions' },
+  { label: 'Points', to: '/points' },
   { label: 'Rankings', to: '/rankings' },
 ]
 

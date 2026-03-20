@@ -1,9 +1,12 @@
 import type {
+  ActivityProgressItem,
   Competition,
   CompetitionDetail,
   LoginResponse,
   ParticipantCompetition,
   ParticipantProfile,
+  PointsLeaderboardResponse,
+  PointsSummary,
   RankingsResponse,
   TeamDetail,
 } from '../types/api'
@@ -76,5 +79,15 @@ export const api = {
   getRankings(limit = 50, offset = 0) {
     const params = new URLSearchParams({ limit: String(limit), offset: String(offset) })
     return request<RankingsResponse>(`/participants/rankings?${params.toString()}`)
+  },
+  getMyPointsSummary(accessToken: string) {
+    return request<PointsSummary>('/points/me/summary', { accessToken })
+  },
+  getMyActivityProgress(accessToken: string) {
+    return request<ActivityProgressItem[]>('/points/me/activities', { accessToken })
+  },
+  getPointsLeaderboard(limit = 100, offset = 0) {
+    const params = new URLSearchParams({ limit: String(limit), offset: String(offset) })
+    return request<PointsLeaderboardResponse>(`/points/leaderboard?${params.toString()}`)
   },
 }

@@ -114,3 +114,33 @@ export type RankingsResponse = {
   type: 'participation-ranking'
   items: RankingItem[]
 }
+
+export type PointsSummary = {
+  participantId: string
+  totalPoints: number
+  updatedAt: string | null
+}
+
+export type ActivityProgressItem = {
+  id: string
+  code: string
+  name: string
+  description: string | null
+  points: number
+  isActive: boolean
+  completedAt: string | null
+  note: string | null
+  isCompleted: boolean
+}
+
+export type PointsLeaderboardItem = {
+  participantId: string
+  fullName: string
+  institution: string | null
+  totalPoints: number
+}
+
+export type PointsLeaderboardResponse = {
+  type: 'points-leaderboard'
+  items: PointsLeaderboardItem[]
+}

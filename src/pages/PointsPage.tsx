@@ -2,284 +2,233 @@ import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../lib/api'
-import type { ActivityProgressItem, ActivitySubmission, PointsLeaderboardItem, PointsSummary } from '../types/api'
+import type { ActivityProgressItem, PointsSummary } from '../types/api'
 
 type SubmissionDialogState = {
-  isOpen: boolean
-  status: 'loading' | 'success' | 'error'
-  title: string
-  detail: string
+    isOpen: boolean
+    status: 'loading' | 'success' | 'error'
+    title: string
+    detail: string
 }
 
 export function PointsPage() {
-  const { accessToken } = useAuth()
-  const [summary, setSummary] = useState<PointsSummary | null>(null)
-  const [activities, setActivities] = useState<ActivityProgressItem[]>([])
-  const [leaderboard, setLeaderboard] = useState<PointsLeaderboardItem[]>([])
-  const [submissions, setSubmissions] = useState<ActivitySubmission[]>([])
-  const [loading, setLoading] = useState(true)
-  const [errorMessage, setErrorMessage] = useState('')
-  const [submissionActivityId, setSubmissionActivityId] = useState('')
-  const [submissionLink, setSubmissionLink] = useState('')
-  const [submitMessage, setSubmitMessage] = useState('')
-  const [submissionDialog, setSubmissionDialog] = useState<SubmissionDialogState>({
-    isOpen: false,
-    status: 'loading',
-    title: '',
-    detail: '',
-  })
-
-  useEffect(() => {
-    async function load() {
-      if (!accessToken) {
-        setErrorMessage('Session expired. Please login again.')
-        setLoading(false)
-        return
-      }
-
-      try {
-        setErrorMessage('')
-        const [summaryData, activitiesData, leaderboardData, submissionsData] = await Promise.all([
-          api.getMyPointsSummary(accessToken),
-          api.getMyActivityProgress(accessToken),
-          api.getPointsLeaderboard(100, 0),
-          api.getMySubmissions(accessToken),
-        ])
-
-        setSummary(summaryData)
-        setActivities(activitiesData)
-        setLeaderboard(leaderboardData.items)
-        setSubmissions(submissionsData)
-      } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : 'Could not load points data')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    void load()
-  }, [accessToken])
-
-  const completedCount = useMemo(
-    () => activities.filter((item) => item.isCompleted).length,
-    [activities],
-  )
-  const availablePoints = useMemo(
-    () => activities.filter((item) => item.isActive).reduce((acc, item) => acc + item.points, 0),
-    [activities],
-  )
-
-  const linkBasedActivities = useMemo(
-    () => activities.filter((item) => item.activityTypeCode === 'LINK_BASED' && item.isActive && !item.isCompleted),
-    [activities],
-  )
-
-  const onSubmitLink = async (event: FormEvent) => {
-    event.preventDefault()
-    if (!accessToken) return
-
-    try {
-      setSubmitMessage('')
-      setSubmissionDialog({
-        isOpen: true,
+    const { accessToken } = useAuth()
+    const [summary, setSummary] = useState<PointsSummary | null>(null)
+    const [activities, setActivities] = useState<ActivityProgressItem[]>([])
+    const [loading, setLoading] = useState(true)
+    const [errorMessage, setErrorMessage] = useState('')
+    const [submissionLinks, setSubmissionLinks] = useState<Record<string, string>>({})
+    const [submittingActivityId, setSubmittingActivityId] = useState<string | null>(null)
+    const [submissionDialog, setSubmissionDialog] = useState<SubmissionDialogState>({
+        isOpen: false,
         status: 'loading',
-        title: 'Submitting Link',
-        detail: 'Please wait while we submit your activity link for review...',
-      })
-      await api.submitMyActivityLink(accessToken, {
-        activityId: submissionActivityId,
-        submissionLink: submissionLink.trim(),
-      })
-      const [activitiesData, submissionsData] = await Promise.all([
-        api.getMyActivityProgress(accessToken),
-        api.getMySubmissions(accessToken),
-      ])
-      setActivities(activitiesData)
-      setSubmissions(submissionsData)
-      setSubmissionLink('')
-      setSubmitMessage('Submission sent. Admin review is required before points are awarded.')
-      setSubmissionDialog({
-        isOpen: true,
-        status: 'success',
-        title: 'Submission Sent',
-        detail: 'Your link was submitted successfully and is now pending admin review.',
-      })
-    } catch (error) {
-      setSubmitMessage(error instanceof Error ? error.message : 'Submission failed')
-      setSubmissionDialog({
-        isOpen: true,
-        status: 'error',
-        title: 'Submission Failed',
-        detail: error instanceof Error ? error.message : 'Could not submit your link. Please try again.',
-      })
+        title: '',
+        detail: '',
+    })
+
+    useEffect(() => {
+        async function load() {
+            if (!accessToken) {
+                setErrorMessage('Session expired. Please login again.')
+                setLoading(false)
+                return
+            }
+
+            try {
+                setErrorMessage('')
+                const [summaryData, activitiesData] = await Promise.all([
+                    api.getMyPointsSummary(accessToken),
+                    api.getMyActivityProgress(accessToken),
+                ])
+
+                setSummary(summaryData)
+                setActivities(activitiesData)
+            } catch (error) {
+                setErrorMessage(error instanceof Error ? error.message : 'Could not load points data')
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        void load()
+    }, [accessToken])
+
+    const completedCount = useMemo(
+        () => activities.filter((item) => item.isCompleted).length,
+        [activities],
+    )
+
+    const onSubmitLink = async (event: FormEvent, activityId: string) => {
+        event.preventDefault()
+        if (!accessToken) return
+
+        const link = (submissionLinks[activityId] || '').trim()
+        if (!link) return
+
+        try {
+            setSubmittingActivityId(activityId)
+            setSubmissionDialog({
+                isOpen: true,
+                status: 'loading',
+                title: 'Submitting Link',
+                detail: 'Please wait while we submit your activity link for review...',
+            })
+            await api.submitMyActivityLink(accessToken, {
+                activityId,
+                submissionLink: link,
+            })
+            const activitiesData = await api.getMyActivityProgress(accessToken)
+            setActivities(activitiesData)
+            setSubmissionLinks((prev) => ({ ...prev, [activityId]: '' }))
+            setSubmissionDialog({
+                isOpen: true,
+                status: 'success',
+                title: 'Submission Sent',
+                detail: 'Your link was submitted successfully and is now pending admin review.',
+            })
+        } catch (error) {
+            setSubmitMessage(error instanceof Error ? error.message : 'Submission failed')
+            setSubmissionDialog({
+                isOpen: true,
+                status: 'error',
+                title: 'Submission Failed',
+                detail: error instanceof Error ? error.message : 'Could not submit your link. Please try again.',
+            })
+        } finally {
+            setSubmittingActivityId(null)
+        }
     }
-  }
 
-  const closeSubmissionDialog = () => {
-    if (submissionDialog.status === 'loading') return
-    setSubmissionDialog((prev) => ({ ...prev, isOpen: false }))
-  }
+    const closeSubmissionDialog = () => {
+        if (submissionDialog.status === 'loading') return
+        setSubmissionDialog((prev) => ({ ...prev, isOpen: false }))
+    }
 
-  if (loading) {
-    return <div className="center-state">Loading points...</div>
-  }
+    if (loading) {
+        return <div className="center-state">Loading points...</div>
+    }
 
-  if (errorMessage) {
-    return <div className="error-banner">{errorMessage}</div>
-  }
+    if (errorMessage) {
+        return <div className="error-banner">{errorMessage}</div>
+    }
 
-  return (
-    <section className="stack">
-      <h2>Points Center</h2>
+    return (
+        <section className="stack">
+            <h2>Your Points</h2>
 
-      <div className="grid two">
-        <article className="card">
-          <h3>Total Points</h3>
-          <p style={{ fontSize: 34, fontWeight: 700 }}>{summary?.totalPoints ?? 0}</p>
-          <p className="muted tiny">
-            Last updated:{' '}
-            {summary?.updatedAt ? new Date(summary.updatedAt).toLocaleString() : 'No points yet'}
-          </p>
-        </article>
+            <div className="grid two">
+                <article className="card">
+                    <h3>Total Points</h3>
+                    <p style={{ fontSize: 34, fontWeight: 700 }}>{summary?.totalPoints ?? 0}</p>
+                    <p className="muted tiny">
+                        Last updated:{' '}
+                        {summary?.updatedAt ? new Date(summary.updatedAt).toLocaleString() : 'No points yet'}
+                    </p>
+                </article>
 
-        <article className="card">
-          <h3>Activity Progress</h3>
-          <p className="muted">
-            Completed {completedCount} of {activities.length} activities
-          </p>
-          <p className="muted">Available active points: {availablePoints}</p>
-        </article>
-      </div>
+                <article className="card">
+                    <h3>Activity Progress</h3>
+                    <p className="muted">
+                        Completed {completedCount} of {activities.length} activities
+                    </p>
+                </article>
+            </div>
 
-      <article className="card table-wrap">
-        <h3>Your Activities</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Activity</th>
-              <th>Points</th>
-              <th>Status</th>
-              <th>Completed At</th>
-            </tr>
-          </thead>
-          <tbody>
-            {activities.map((item) => (
-              <tr key={item.id}>
-                <td>
-                  <strong>{item.name}</strong>
-                  {item.description ? <p className="muted tiny">{item.description}</p> : null}
-                </td>
-                <td>{item.points}</td>
-                <td>
-                  {item.isCompleted
-                    ? 'Completed'
-                    : item.submissionStatus
-                      ? `Submitted (${item.submissionStatus})`
-                      : item.isActive
-                        ? 'Pending'
-                        : 'Inactive'}
-                </td>
-                <td>{item.completedAt ? new Date(item.completedAt).toLocaleString() : '-'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </article>
+            <section className="stack">
+                <h3>Your Activities</h3>
+                <div className="grid">
+                    {activities.map((item) => {
+                        const isLinkBased = item.activityTypeCode === 'LINK_BASED'
+                        const statusLabel = item.isCompleted
+                            ? 'Completed'
+                            : item.submissionStatus
+                                ? `Submitted (${item.submissionStatus})`
+                                : item.isActive
+                                    ? 'Pending'
+                                    : 'Inactive'
 
-      <article className="card stack">
-        <h3>Submit Link-Based Activity</h3>
-        <form className="grid two" onSubmit={onSubmitLink}>
-          <select
-            value={submissionActivityId}
-            onChange={(event) => setSubmissionActivityId(event.target.value)}
-            required
-          >
-            <option value="">Select Link-Based Activity</option>
-            {linkBasedActivities.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-          <input
-            type="url"
-            value={submissionLink}
-            onChange={(event) => setSubmissionLink(event.target.value)}
-            placeholder="Submission URL"
-            required
-          />
-          <button type="submit" disabled={!submissionActivityId || !submissionLink.trim()}>
-            Submit Link
-          </button>
-        </form>
-        {submitMessage ? <p className="muted tiny">{submitMessage}</p> : null}
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Activity</th>
-                <th>Status</th>
-                <th>Submitted At</th>
-              </tr>
-            </thead>
-            <tbody>
-              {submissions.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.activityName}</td>
-                  <td>{item.status}</td>
-                  <td>{new Date(item.submittedAt).toLocaleString()}</td>
-                </tr>
-              ))}
-              {!submissions.length ? (
-                <tr>
-                  <td colSpan={3} className="muted">
-                    No submissions yet.
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
-      </article>
+                        return (
+                            <details key={item.id} className="card">
+                                <summary className="section-head" style={{ cursor: 'pointer', listStyle: 'none' }}>
+                                    <strong>{item.name}</strong>
+                                    <span className="status">{statusLabel}</span>
+                                </summary>
 
-      <article className="card table-wrap">
-        <h3>Points Leaderboard</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Name</th>
-              <th>Institution</th>
-              <th>Total Points</th>
-            </tr>
-          </thead>
-          <tbody>
-            {leaderboard.map((item, index) => (
-              <tr key={item.participantId}>
-                <td>{index + 1}</td>
-                <td>{item.fullName}</td>
-                <td>{item.institution || '-'}</td>
-                <td>{item.totalPoints}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </article>
+                                <div className="data-list compact">
+                                    <div>
+                                        <dt>Points</dt>
+                                        <dd>{item.points}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Type</dt>
+                                        <dd>{item.activityTypeCode}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Completed At</dt>
+                                        <dd>{item.completedAt ? new Date(item.completedAt).toLocaleString() : '-'}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Submission Status</dt>
+                                        <dd>{item.submissionStatus || '-'}</dd>
+                                    </div>
+                                </div>
 
-      {submissionDialog.isOpen ? (
-        <div className="admin-dialog-backdrop" role="presentation">
-          <div className="admin-dialog" role="dialog" aria-live="polite" aria-busy={submissionDialog.status === 'loading'}>
-            <h3>{submissionDialog.title}</h3>
-            <p className="muted">{submissionDialog.detail}</p>
-            {submissionDialog.status === 'loading' ? <div className="admin-spinner" /> : null}
-            {submissionDialog.status === 'success' ? <p className="status">Submission completed successfully.</p> : null}
-            {submissionDialog.status === 'error' ? <p className="error-banner">Submission failed.</p> : null}
-            <button type="button" onClick={closeSubmissionDialog} disabled={submissionDialog.status === 'loading'}>
-              {submissionDialog.status === 'loading' ? 'Submitting...' : 'Close'}
-            </button>
-          </div>
-        </div>
-      ) : null}
-    </section>
-  )
+                                {item.description ? <p className="muted tiny">{item.description}</p> : null}
+
+                                {isLinkBased ? (
+                                    <div className="stack">
+                                        <form className="actions-row" onSubmit={(event) => onSubmitLink(event, item.id)}>
+                                            <input
+                                                type="url"
+                                                value={submissionLinks[item.id] || ''}
+                                                onChange={(event) =>
+                                                    setSubmissionLinks((prev) => ({
+                                                        ...prev,
+                                                        [item.id]: event.target.value,
+                                                    }))
+                                                }
+                                                placeholder="Submission URL"
+                                                required
+                                                disabled={!item.isActive || item.isCompleted || submittingActivityId === item.id}
+                                            />
+                                            <button
+                                                type="submit"
+                                                disabled={!item.isActive || item.isCompleted || !((submissionLinks[item.id] || '').trim()) || submittingActivityId === item.id}
+                                            >
+                                                {submittingActivityId === item.id ? 'Submitting...' : 'Submit Link'}
+                                            </button>
+                                        </form>
+                                        <p className="tiny muted">
+                                            Latest submission link: {item.submittedLink ? <a href={item.submittedLink} target="_blank" rel="noreferrer">Open</a> : '-'}
+                                        </p>
+                                        <p className="tiny muted">
+                                            Approved evidence: {item.approvedSubmissionLink ? <a href={item.approvedSubmissionLink} target="_blank" rel="noreferrer">Open</a> : '-'}
+                                        </p>
+                                        <p className="tiny muted">
+                                            Submitted at: {item.submittedAt ? new Date(item.submittedAt).toLocaleString() : '-'}
+                                        </p>
+                                    </div>
+                                ) : null}
+                            </details>
+                        )
+                    })}
+                </div>
+            </section>
+
+            {submissionDialog.isOpen ? (
+                <div className="admin-dialog-backdrop" role="presentation">
+                    <div className="admin-dialog" role="dialog" aria-live="polite" aria-busy={submissionDialog.status === 'loading'}>
+                        <h3>{submissionDialog.title}</h3>
+                        <p className="muted">{submissionDialog.detail}</p>
+                        {submissionDialog.status === 'loading' ? <div className="admin-spinner" /> : null}
+                        {submissionDialog.status === 'success' ? <p className="status">Submission completed successfully.</p> : null}
+                        {submissionDialog.status === 'error' ? <p className="error-banner">Submission failed.</p> : null}
+                        <button type="button" onClick={closeSubmissionDialog} disabled={submissionDialog.status === 'loading'}>
+                            {submissionDialog.status === 'loading' ? 'Submitting...' : 'Close'}
+                        </button>
+                    </div>
+                </div>
+            ) : null}
+        </section>
+    )
 }

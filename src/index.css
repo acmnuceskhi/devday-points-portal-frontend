@@ -316,6 +316,10 @@ th {
   grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
 }
 
+.admin-layout-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .admin-left-panel {
   align-content: start;
   max-height: calc(100vh - 180px);
@@ -413,6 +417,92 @@ th {
   font-size: 12px;
   font-weight: 700;
   padding: 4px 10px;
+}
+
+.competition-cards-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.competition-card-modern {
+  border: 1px solid #cfe0db;
+  border-radius: 14px;
+  padding: 14px;
+  background:
+    linear-gradient(140deg, rgba(255, 255, 255, 0.98), rgba(245, 250, 248, 0.96)),
+    radial-gradient(circle at 88% 8%, rgba(239, 124, 36, 0.12), transparent 40%);
+  box-shadow: 0 12px 28px rgba(18, 42, 37, 0.08);
+  display: grid;
+  gap: 12px;
+}
+
+.competition-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.competition-card-head h4 {
+  font-size: 18px;
+}
+
+.competition-status-pill,
+.competition-role-pill {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+.competition-status-pill {
+  background: rgba(15, 118, 110, 0.14);
+  color: #0c5f58;
+}
+
+.competition-role-pill {
+  background: rgba(239, 124, 36, 0.16);
+  color: #93460f;
+}
+
+.competition-card-teamline {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.competition-meta-list {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+}
+
+.competition-meta-list div {
+  display: grid;
+  gap: 3px;
+}
+
+.competition-meta-list dt {
+  margin: 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+
+.competition-meta-list dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.competition-card-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .selected-participant-card {

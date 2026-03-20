@@ -3,11 +3,8 @@ import { AdminProtectedRoute } from './components/AdminProtectedRoute'
 import { AppShell } from './components/AppShell'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AdminLoginPage } from './pages/AdminLoginPage'
-import { CompetitionDetailPage } from './pages/CompetitionDetailPage'
-import { CompetitionsPage } from './pages/CompetitionsPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
-import { MyCompetitionsPage } from './pages/MyCompetitionsPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { AdminPointsPage } from './pages/AdminPointsPage'
 import { PointsPage } from './pages/PointsPage'
@@ -28,9 +25,6 @@ function App() {
           }
         >
           <Route index element={<DashboardPage />} />
-          <Route path="my-competitions" element={<MyCompetitionsPage />} />
-          <Route path="competitions" element={<CompetitionsPage />} />
-          <Route path="competitions/:competitionId" element={<CompetitionDetailPage />} />
           <Route path="teams/:teamId" element={<TeamDetailPage />} />
           <Route path="rankings" element={<RankingsPage />} />
           <Route path="points" element={<PointsPage />} />

@@ -245,6 +245,21 @@ export type ActivitySubmission = {
   reviewNote?: string | null
 }
 
+export type AdminParticipantCompetition = {
+  teamId: string
+  isLeader: boolean
+  joinedAt: string
+  competitionId: string
+  teamName: string
+  paymentStatus: string
+  competitionName: string
+  compDay: string
+  startTime: string | null
+  endTime: string | null
+  venueId: string | null
+  venueName: string | null
+}
+
 export type CompletionItem = {
   id: string
   activityId: string
@@ -276,4 +291,5 @@ export type AdminParticipantDetail = {
   completions: CompletionItem[]
   pendingSubmissions: ActivitySubmission[]
   ledger: LedgerEntry[]
+  competitions: AdminParticipantCompetition[]
 }

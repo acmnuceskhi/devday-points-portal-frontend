@@ -63,9 +63,6 @@ export function MyCompetitionsPage() {
               <Link className="link-button" to={`/teams/${item.teamId}`}>
                 View Team
               </Link>
-              <Link className="link-button" to={`/competitions/${item.competitionId}`}>
-                View Competition
-              </Link>
             </div>
           </article>
         ))}

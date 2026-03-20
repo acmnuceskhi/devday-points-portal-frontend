@@ -4,6 +4,13 @@ import { useAuth } from '../context/AuthContext'
 import { api } from '../lib/api'
 import type { ActivityProgressItem, ActivitySubmission, PointsLeaderboardItem, PointsSummary } from '../types/api'
 
+type SubmissionDialogState = {
+  isOpen: boolean
+  status: 'loading' | 'success' | 'error'
+  title: string
+  detail: string
+}
+
 export function PointsPage() {
   const { accessToken } = useAuth()
   const [summary, setSummary] = useState<PointsSummary | null>(null)
@@ -15,6 +22,12 @@ export function PointsPage() {
   const [submissionActivityId, setSubmissionActivityId] = useState('')
   const [submissionLink, setSubmissionLink] = useState('')
   const [submitMessage, setSubmitMessage] = useState('')
+  const [submissionDialog, setSubmissionDialog] = useState<SubmissionDialogState>({
+    isOpen: false,
+    status: 'loading',
+    title: '',
+    detail: '',
+  })
 
   useEffect(() => {
     async function load() {
@@ -67,6 +80,12 @@ export function PointsPage() {
 
     try {
       setSubmitMessage('')
+      setSubmissionDialog({
+        isOpen: true,
+        status: 'loading',
+        title: 'Submitting Link',
+        detail: 'Please wait while we submit your activity link for review...',
+      })
       await api.submitMyActivityLink(accessToken, {
         activityId: submissionActivityId,
         submissionLink: submissionLink.trim(),
@@ -79,9 +98,26 @@ export function PointsPage() {
       setSubmissions(submissionsData)
       setSubmissionLink('')
       setSubmitMessage('Submission sent. Admin review is required before points are awarded.')
+      setSubmissionDialog({
+        isOpen: true,
+        status: 'success',
+        title: 'Submission Sent',
+        detail: 'Your link was submitted successfully and is now pending admin review.',
+      })
     } catch (error) {
       setSubmitMessage(error instanceof Error ? error.message : 'Submission failed')
+      setSubmissionDialog({
+        isOpen: true,
+        status: 'error',
+        title: 'Submission Failed',
+        detail: error instanceof Error ? error.message : 'Could not submit your link. Please try again.',
+      })
     }
+  }
+
+  const closeSubmissionDialog = () => {
+    if (submissionDialog.status === 'loading') return
+    setSubmissionDialog((prev) => ({ ...prev, isOpen: false }))
   }
 
   if (loading) {
@@ -229,6 +265,21 @@ export function PointsPage() {
           </tbody>
         </table>
       </article>
+
+      {submissionDialog.isOpen ? (
+        <div className="admin-dialog-backdrop" role="presentation">
+          <div className="admin-dialog" role="dialog" aria-live="polite" aria-busy={submissionDialog.status === 'loading'}>
+            <h3>{submissionDialog.title}</h3>
+            <p className="muted">{submissionDialog.detail}</p>
+            {submissionDialog.status === 'loading' ? <div className="admin-spinner" /> : null}
+            {submissionDialog.status === 'success' ? <p className="status">Submission completed successfully.</p> : null}
+            {submissionDialog.status === 'error' ? <p className="error-banner">Submission failed.</p> : null}
+            <button type="button" onClick={closeSubmissionDialog} disabled={submissionDialog.status === 'loading'}>
+              {submissionDialog.status === 'loading' ? 'Submitting...' : 'Close'}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </section>
   )
 }

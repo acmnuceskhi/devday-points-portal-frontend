@@ -41,6 +41,8 @@ export function AdminPointsPage() {
   const [auditLogs, setAuditLogs] = useState<PointsAuditLog[]>([])
   const [selectedParticipantId, setSelectedParticipantId] = useState('')
   const [participantDetail, setParticipantDetail] = useState<AdminParticipantDetail | null>(null)
+  const [participantDetailLoading, setParticipantDetailLoading] = useState(false)
+  const [participantDetailError, setParticipantDetailError] = useState('')
 
   const [participantSearch, setParticipantSearch] = useState('')
   const [loading, setLoading] = useState(false)
@@ -122,6 +124,7 @@ export function AdminPointsPage() {
   const refreshParticipantDetails = async (participantId: string) => {
     if (!accessToken || !participantId) {
       setParticipantDetail(null)
+      setParticipantDetailError('')
       return
     }
 
@@ -151,10 +154,34 @@ export function AdminPointsPage() {
   useEffect(() => {
     if (!selectedParticipantId) {
       setParticipantDetail(null)
+      setParticipantDetailError('')
+      setParticipantDetailLoading(false)
       return
     }
 
-    void refreshParticipantDetails(selectedParticipantId)
+    let isCurrent = true
+
+    const run = async () => {
+      setParticipantDetailLoading(true)
+      setParticipantDetailError('')
+      try {
+        await refreshParticipantDetails(selectedParticipantId)
+      } catch (error) {
+        if (!isCurrent) return
+        setParticipantDetail(null)
+        setParticipantDetailError(error instanceof Error ? error.message : 'Could not load participant details')
+      } finally {
+        if (isCurrent) {
+          setParticipantDetailLoading(false)
+        }
+      }
+    }
+
+    void run()
+
+    return () => {
+      isCurrent = false
+    }
   }, [accessToken, selectedParticipantId])
 
   const filteredParticipants = useMemo(() => {
@@ -317,69 +344,41 @@ export function AdminPointsPage() {
       {loading ? <div className="center-state">Loading admin data...</div> : null}
       {initialLoadError ? <div className="error-banner">{initialLoadError}</div> : null}
 
-      <div className="admin-layout">
-        <aside className="card admin-left-panel stack">
-          <div className="section-head">
-            <h3>Participants</h3>
-            <p className="muted tiny">Search and select</p>
-          </div>
-          <input
-            value={participantSearch}
-            onChange={(event) => setParticipantSearch(event.target.value)}
-            placeholder="Search by name, institution, or id"
-          />
-          <div className="participant-search-results">
-            {filteredParticipants.map((item) => (
-              <button
-                key={item.participantId}
-                type="button"
-                className={`participant-item ${selectedParticipantId === item.participantId ? 'selected' : ''}`}
-                aria-pressed={selectedParticipantId === item.participantId}
-                onClick={() => setSelectedParticipantId(item.participantId)}
-              >
-                <span>
-                  <strong>{item.fullName}</strong>
-                  <small>{item.institution || 'No institution'}</small>
-                </span>
-                {selectedParticipantId === item.participantId ? (
-                  <span className="selection-badge">Selected</span>
-                ) : null}
-              </button>
-            ))}
-          </div>
-        </aside>
+      <div className={`admin-layout ${activeTab === 'participant-workflow' ? '' : 'admin-layout-single'}`}>
+        {activeTab === 'participant-workflow' ? (
+          <aside className="card admin-left-panel stack">
+            <div className="section-head">
+              <h3>Participants</h3>
+              <p className="muted tiny">Search and select</p>
+            </div>
+            <input
+              value={participantSearch}
+              onChange={(event) => setParticipantSearch(event.target.value)}
+              placeholder="Search by name, institution, or id"
+            />
+            <div className="participant-search-results">
+              {filteredParticipants.map((item) => (
+                <button
+                  key={item.participantId}
+                  type="button"
+                  className={`participant-item ${selectedParticipantId === item.participantId ? 'selected' : ''}`}
+                  aria-pressed={selectedParticipantId === item.participantId}
+                  onClick={() => setSelectedParticipantId(item.participantId)}
+                >
+                  <span>
+                    <strong>{item.fullName}</strong>
+                    <small>{item.institution || 'No institution'}</small>
+                  </span>
+                  {selectedParticipantId === item.participantId ? (
+                    <span className="selection-badge">Selected</span>
+                  ) : null}
+                </button>
+              ))}
+            </div>
+          </aside>
+        ) : null}
 
         <div className="stack admin-right-panel">
-          <article className={`card selected-participant-card ${selectedParticipant ? 'active' : ''}`}>
-            <p className="tiny muted">Current Participant</p>
-            {participantDetail ? (
-              <div className="data-list compact">
-                <div>
-                  <dt>Name</dt>
-                  <dd>{participantDetail.participant.fullName}</dd>
-                </div>
-                <div>
-                  <dt>Total Points</dt>
-                  <dd>{participantDetail.summary.totalPoints}</dd>
-                </div>
-                <div>
-                  <dt>Institution</dt>
-                  <dd>{participantDetail.participant.institution || '-'}</dd>
-                </div>
-                <div>
-                  <dt>Email</dt>
-                  <dd>{participantDetail.participant.email || '-'}</dd>
-                </div>
-                <div>
-                  <dt>Phone</dt>
-                  <dd>{participantDetail.participant.phone || '-'}</dd>
-                </div>
-              </div>
-            ) : (
-              <p className="muted">Select a participant from the left panel.</p>
-            )}
-          </article>
-
           <div className="admin-subtabs" role="tablist" aria-label="Admin workflows">
             <button
               type="button"
@@ -412,6 +411,82 @@ export function AdminPointsPage() {
 
           {activeTab === 'participant-workflow' ? (
             <div className="stack">
+              <article className={`card selected-participant-card ${selectedParticipant ? 'active' : ''}`}>
+                <p className="tiny muted">Current Participant</p>
+                {participantDetailLoading ? (
+                  <div className="actions-row">
+                    <div className="admin-spinner" aria-hidden="true" />
+                    <p className="muted">Loading participant details...</p>
+                  </div>
+                ) : participantDetailError ? (
+                  <div className="error-banner">{participantDetailError}</div>
+                ) : participantDetail ? (
+                  <div className="data-list compact">
+                    <div>
+                      <dt>Name</dt>
+                      <dd>{participantDetail.participant.fullName}</dd>
+                    </div>
+                    <div>
+                      <dt>Total Points</dt>
+                      <dd>{participantDetail.summary.totalPoints}</dd>
+                    </div>
+                    <div>
+                      <dt>Institution</dt>
+                      <dd>{participantDetail.participant.institution || '-'}</dd>
+                    </div>
+                    <div>
+                      <dt>Email</dt>
+                      <dd>{participantDetail.participant.email || '-'}</dd>
+                    </div>
+                    <div>
+                      <dt>Phone</dt>
+                      <dd>{participantDetail.participant.phone || '-'}</dd>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="muted">Select a participant from the left panel.</p>
+                )}
+              </article>
+
+              {participantDetail ? (
+                <article className="card admin-flow-card table-wrap">
+                  <h3>Participant Competitions</h3>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Competition</th>
+                        <th>Team</th>
+                        <th>Date & Time</th>
+                        <th>Venue</th>
+                        <th>Payment</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {participantDetail.competitions.map((item) => (
+                        <tr key={`${item.teamId}-${item.competitionId}`}>
+                          <td>{item.competitionName}</td>
+                          <td>
+                            {item.teamName} {item.isLeader ? '(Leader)' : ''}
+                          </td>
+                          <td>
+                            {new Date(item.compDay).toLocaleDateString()} | {item.startTime || '-'} - {item.endTime || '-'}
+                          </td>
+                          <td>{item.venueName || 'TBA'}</td>
+                          <td>{item.paymentStatus}</td>
+                        </tr>
+                      ))}
+                      {!participantDetail.competitions.length ? (
+                        <tr>
+                          <td colSpan={5} className="muted">
+                            No competition registrations found.
+                          </td>
+                        </tr>
+                      ) : null}
+                    </tbody>
+                  </table>
+                </article>
+              ) : null}
+
               <article className="card admin-flow-card stack">
                 <h3>Mark Activity Completion</h3>
                 <form className="grid two" onSubmit={onMarkCompletion}>

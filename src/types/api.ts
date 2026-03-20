@@ -143,9 +143,16 @@ export type ActivityProgressItem = {
   description: string | null
   points: number
   isActive: boolean
+  activityTypeCode: 'MANUAL' | 'LINK_BASED' | string
+  completionId: string | null
   completedAt: string | null
   note: string | null
+  approvedSubmissionLink: string | null
   isCompleted: boolean
+  submissionId: string | null
+  submissionStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | null
+  submittedLink: string | null
+  submittedAt: string | null
 }
 
 export type PointsLeaderboardItem = {
@@ -166,6 +173,19 @@ export type ActivityType = {
   name: string
   description: string | null
   points: number
+  activityTypeId: string
+  activityTypeCode: string
+  activityTypeName: string
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export type ActivityKind = {
+  id: string
+  code: string
+  name: string
+  description: string | null
   isActive: boolean
   createdAt: string
   updatedAt: string
@@ -176,13 +196,19 @@ export type CreateActivityTypePayload = {
   name: string
   description?: string
   points: number
+  activityTypeId: string
   isActive?: boolean
 }
 
 export type MarkCompletionPayload = {
   participantId: string
-  activityTypeId: string
+  activityId: string
   note?: string
+}
+
+export type SubmitActivityLinkPayload = {
+  activityId: string
+  submissionLink: string
 }
 
 export type AdjustPointsPayload = {
@@ -200,4 +226,54 @@ export type PointsAuditLog = {
   note: string | null
   payload: unknown
   createdAt: string
+}
+
+export type ActivitySubmission = {
+  id: string
+  participantId: string
+  fullName?: string
+  institution?: string | null
+  email?: string | null
+  phone?: string | null
+  activityId: string
+  activityName: string
+  points: number
+  submissionLink: string
+  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  submittedAt: string
+  reviewedAt?: string | null
+  reviewNote?: string | null
+}
+
+export type CompletionItem = {
+  id: string
+  activityId: string
+  activityName: string
+  activityCode: string
+  points: number
+  completedAt: string
+  note: string | null
+  submissionLink: string | null
+}
+
+export type LedgerEntry = {
+  id: string
+  entryType: string
+  pointsDelta: number
+  metadata: unknown
+  createdAt: string
+}
+
+export type AdminParticipantDetail = {
+  participant: {
+    participantId: string
+    fullName: string
+    institution: string | null
+    email: string | null
+    phone: string | null
+  }
+  summary: PointsSummary
+  completions: CompletionItem[]
+  pendingSubmissions: ActivitySubmission[]
+  ledger: LedgerEntry[]
 }

@@ -1,5 +1,8 @@
 import type {
+  ActivityKind,
+  ActivitySubmission,
   AdminLoginResponse,
+  AdminParticipantDetail,
   ActivityType,
   ActivityProgressItem,
   AdjustPointsPayload,
@@ -8,6 +11,7 @@ import type {
   CreateActivityTypePayload,
   LoginResponse,
   MarkCompletionPayload,
+  SubmitActivityLinkPayload,
   ParticipantCompetition,
   ParticipantProfile,
   PointsAuditLog,
@@ -104,12 +108,15 @@ export const api = {
   },
   getAdminActivityTypes(accessToken: string, includeInactive = true) {
     const params = new URLSearchParams({ includeInactive: String(includeInactive) })
-    return request<ActivityType[]>(`/points/admin/activity-types?${params.toString()}`, {
+    return request<ActivityType[]>(`/points/admin/activities?${params.toString()}`, {
       accessToken,
     })
   },
+  getAdminActivityKinds(accessToken: string) {
+    return request<ActivityKind[]>('/points/admin/activity-kinds', { accessToken })
+  },
   createAdminActivityType(accessToken: string, payload: CreateActivityTypePayload) {
-    return request<ActivityType>('/points/admin/activity-types', {
+    return request<ActivityType>('/points/admin/activities', {
       method: 'POST',
       accessToken,
       body: payload,
@@ -128,6 +135,51 @@ export const api = {
       accessToken,
       body: payload,
     })
+  },
+  revokeAdminCompletion(accessToken: string, completionId: string, note?: string) {
+    return request(`/points/admin/completions/${completionId}`, {
+      method: 'DELETE',
+      accessToken,
+      body: { note },
+    })
+  },
+  getAdminParticipantDetails(accessToken: string, participantId: string) {
+    return request<AdminParticipantDetail>(`/points/admin/participants/${participantId}/details`, {
+      accessToken,
+    })
+  },
+  getAdminPendingSubmissions(accessToken: string, participantId?: string) {
+    const params = new URLSearchParams({ limit: '30', offset: '0' })
+    if (participantId) {
+      params.set('participantId', participantId)
+    }
+    return request<ActivitySubmission[]>(`/points/admin/submissions/pending?${params.toString()}`, {
+      accessToken,
+    })
+  },
+  approveAdminSubmission(accessToken: string, submissionId: string, note?: string) {
+    return request(`/points/admin/submissions/${submissionId}/approve`, {
+      method: 'POST',
+      accessToken,
+      body: { note },
+    })
+  },
+  rejectAdminSubmission(accessToken: string, submissionId: string, note?: string) {
+    return request(`/points/admin/submissions/${submissionId}/reject`, {
+      method: 'POST',
+      accessToken,
+      body: { note },
+    })
+  },
+  submitMyActivityLink(accessToken: string, payload: SubmitActivityLinkPayload) {
+    return request('/points/me/submissions', {
+      method: 'POST',
+      accessToken,
+      body: payload,
+    })
+  },
+  getMySubmissions(accessToken: string) {
+    return request<ActivitySubmission[]>('/points/me/submissions', { accessToken })
   },
   getAdminAuditLogs(accessToken: string, limit = 20, offset = 0) {
     const params = new URLSearchParams({ limit: String(limit), offset: String(offset) })

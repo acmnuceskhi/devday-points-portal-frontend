@@ -1,12 +1,15 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { AdminProtectedRoute } from './components/AdminProtectedRoute'
 import { AppShell } from './components/AppShell'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { AdminLoginPage } from './pages/AdminLoginPage'
 import { CompetitionDetailPage } from './pages/CompetitionDetailPage'
 import { CompetitionsPage } from './pages/CompetitionsPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { MyCompetitionsPage } from './pages/MyCompetitionsPage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { AdminPointsPage } from './pages/AdminPointsPage'
 import { PointsPage } from './pages/PointsPage'
 import { RankingsPage } from './pages/RankingsPage'
 import { TeamDetailPage } from './pages/TeamDetailPage'
@@ -32,6 +35,16 @@ function App() {
           <Route path="rankings" element={<RankingsPage />} />
           <Route path="points" element={<PointsPage />} />
         </Route>
+        <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route
+          path="/admin/points"
+          element={
+            <AdminProtectedRoute>
+              <AdminPointsPage />
+            </AdminProtectedRoute>
+          }
+        />
         <Route path="/404" element={<NotFoundPage />} />
         <Route path="*" element={<Navigate to="/404" replace />} />
       </Routes>

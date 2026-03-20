@@ -1,10 +1,16 @@
 import type {
+  AdminLoginResponse,
+  ActivityType,
   ActivityProgressItem,
+  AdjustPointsPayload,
   Competition,
   CompetitionDetail,
+  CreateActivityTypePayload,
   LoginResponse,
+  MarkCompletionPayload,
   ParticipantCompetition,
   ParticipantProfile,
+  PointsAuditLog,
   PointsLeaderboardResponse,
   PointsSummary,
   RankingsResponse,
@@ -15,7 +21,7 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL?.trim() || 'http://localhost:3000/api/v1'
 
 type RequestOptions = {
-  method?: 'GET' | 'POST'
+  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'
   body?: unknown
   accessToken?: string | null
 }
@@ -60,6 +66,12 @@ export const api = {
       body: { email, password },
     })
   },
+  adminLogin(email: string, password: string) {
+    return request<AdminLoginResponse>('/auth/admin/login', {
+      method: 'POST',
+      body: { email, password },
+    })
+  },
   getMe(accessToken: string) {
     return request<ParticipantProfile>('/participants/me', { accessToken })
   },
@@ -89,5 +101,38 @@ export const api = {
   getPointsLeaderboard(limit = 100, offset = 0) {
     const params = new URLSearchParams({ limit: String(limit), offset: String(offset) })
     return request<PointsLeaderboardResponse>(`/points/leaderboard?${params.toString()}`)
+  },
+  getAdminActivityTypes(accessToken: string, includeInactive = true) {
+    const params = new URLSearchParams({ includeInactive: String(includeInactive) })
+    return request<ActivityType[]>(`/points/admin/activity-types?${params.toString()}`, {
+      accessToken,
+    })
+  },
+  createAdminActivityType(accessToken: string, payload: CreateActivityTypePayload) {
+    return request<ActivityType>('/points/admin/activity-types', {
+      method: 'POST',
+      accessToken,
+      body: payload,
+    })
+  },
+  markAdminCompletion(accessToken: string, payload: MarkCompletionPayload) {
+    return request('/points/admin/completions', {
+      method: 'POST',
+      accessToken,
+      body: payload,
+    })
+  },
+  adjustAdminPoints(accessToken: string, payload: AdjustPointsPayload) {
+    return request('/points/admin/adjustments', {
+      method: 'POST',
+      accessToken,
+      body: payload,
+    })
+  },
+  getAdminAuditLogs(accessToken: string, limit = 20, offset = 0) {
+    const params = new URLSearchParams({ limit: String(limit), offset: String(offset) })
+    return request<PointsAuditLog[]>(`/points/admin/audit-logs?${params.toString()}`, {
+      accessToken,
+    })
   },
 }

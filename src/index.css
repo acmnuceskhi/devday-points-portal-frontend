@@ -99,7 +99,8 @@
     }
 
     .portal-frame {
-        @apply mx-auto my-4 w-[min(1240px, calc(100%-16px))] overflow-hidden rounded-2xl border border-[#3f2a2a] bg-[#1b1010]/96 shadow-2xl shadow-black/40;
+        @apply mx-auto my-4 overflow-hidden rounded-2xl border border-[#3f2a2a] bg-[#1b1010]/96 shadow-2xl shadow-black/40;
+        width: min(1240px, calc(100% - 16px));
     }
 
     .topbar {

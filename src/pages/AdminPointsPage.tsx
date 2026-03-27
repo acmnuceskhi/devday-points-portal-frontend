@@ -63,6 +63,7 @@ export function AdminPointsPage() {
     const [newActivityDescription, setNewActivityDescription] = useState('')
     const [newActivityPoints, setNewActivityPoints] = useState('5')
     const [newActivityTypeId, setNewActivityTypeId] = useState('')
+    const [newActivityCorrectAnswer, setNewActivityCorrectAnswer] = useState('')
 
     const [completionActivityId, setCompletionActivityId] = useState('')
     const [completionNote, setCompletionNote] = useState('')
@@ -213,6 +214,11 @@ export function AdminPointsPage() {
         [activities],
     )
 
+    const selectedNewActivityKind = useMemo(
+        () => activityKinds.find((kind) => kind.id === newActivityTypeId) || null,
+        [activityKinds, newActivityTypeId],
+    )
+
     const selectedParticipant = useMemo(
         () => participants.find((item) => item.participantId === selectedParticipantId) || null,
         [participants, selectedParticipantId],
@@ -235,6 +241,10 @@ export function AdminPointsPage() {
                 description: newActivityDescription.trim() || undefined,
                 points: Number(newActivityPoints),
                 activityTypeId: newActivityTypeId,
+                correctAnswerCanonical:
+                    selectedNewActivityKind?.code === 'CORRECT_ANSWER'
+                        ? (newActivityCorrectAnswer.trim() || undefined)
+                        : undefined,
                 isActive: true,
             })
             await refreshGlobalData()
@@ -242,6 +252,7 @@ export function AdminPointsPage() {
             setNewActivityName('')
             setNewActivityDescription('')
             setNewActivityPoints('5')
+            setNewActivityCorrectAnswer('')
             showActionSuccess('Activity Created', 'Activity was created successfully.')
         } catch (error) {
             showActionError('Could Not Create Activity', error instanceof Error ? error.message : 'Create failed')
@@ -616,13 +627,13 @@ export function AdminPointsPage() {
 
                         {activeParticipantWorkflowTab === 'submissions' ? (
                             <article className="card admin-flow-card table-wrap">
-                                <h3>Pending Link Submissions</h3>
+                                <h3>Pending Submissions</h3>
                                 <table>
                                     <thead>
                                         <tr>
                                             <th>Activity</th>
                                             <th>Submitted At</th>
-                                            <th>Link</th>
+                                            <th>Submission</th>
                                             <th>Review Note</th>
                                             <th>Actions</th>
                                         </tr>
@@ -633,9 +644,13 @@ export function AdminPointsPage() {
                                                 <td>{submission.activityName}</td>
                                                 <td>{new Date(submission.submittedAt).toLocaleString()}</td>
                                                 <td>
-                                                    <a href={submission.submissionLink} target="_blank" rel="noreferrer">
-                                                        Open Link
-                                                    </a>
+                                                    {submission.submissionLink ? (
+                                                        <a href={submission.submissionLink} target="_blank" rel="noreferrer">
+                                                            Open Link
+                                                        </a>
+                                                    ) : (
+                                                        <span>{submission.submissionText || '-'}</span>
+                                                    )}
                                                 </td>
                                                 <td>
                                                     <input
@@ -765,6 +780,14 @@ export function AdminPointsPage() {
                                         onChange={(event) => setNewActivityDescription(event.target.value)}
                                         placeholder="Description (optional)"
                                     />
+                                    {selectedNewActivityKind?.code === 'CORRECT_ANSWER' ? (
+                                        <input
+                                            value={newActivityCorrectAnswer}
+                                            onChange={(event) => setNewActivityCorrectAnswer(event.target.value)}
+                                            placeholder="Canonical correct answer"
+                                            required
+                                        />
+                                    ) : null}
                                     <button type="submit">Create Activity</button>
                                 </form>
                             </article>

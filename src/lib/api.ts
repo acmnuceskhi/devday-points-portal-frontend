@@ -11,7 +11,9 @@ import type {
   CreateActivityTypePayload,
   LoginResponse,
   MarkCompletionPayload,
-  SubmitActivityLinkPayload,
+  SignupRequestResponse,
+  SignupVerifyResponse,
+  SubmitActivityPayload,
   ParticipantCompetition,
   ParticipantProfile,
   PointsAuditLog,
@@ -68,6 +70,18 @@ export const api = {
     return request<LoginResponse>('/auth/login', {
       method: 'POST',
       body: { email, password },
+    })
+  },
+  signupRequest(email: string) {
+    return request<SignupRequestResponse>('/auth/signup/request', {
+      method: 'POST',
+      body: { email },
+    })
+  },
+  signupVerify(email: string, token: string, password: string, confirmPassword: string) {
+    return request<SignupVerifyResponse>('/auth/signup/verify', {
+      method: 'POST',
+      body: { email, token, password, confirmPassword },
     })
   },
   adminLogin(email: string, password: string) {
@@ -171,7 +185,7 @@ export const api = {
       body: { note },
     })
   },
-  submitMyActivityLink(accessToken: string, payload: SubmitActivityLinkPayload) {
+  submitMyActivity(accessToken: string, payload: SubmitActivityPayload) {
     return request('/points/me/submissions', {
       method: 'POST',
       accessToken,

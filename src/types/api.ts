@@ -30,6 +30,19 @@ export type LoginResponse = {
   participant: ParticipantProfile
 }
 
+export type SignupRequestResponse = {
+  message: string
+  signupLink?: string
+  expiresInMinutes?: number
+}
+
+export type SignupVerifyResponse = {
+  message: string
+  accessToken: string
+  user: UserSummary
+  participant: ParticipantProfile
+}
+
 export type StaffProfile = {
   id: string
   fullName: string
@@ -143,6 +156,7 @@ export type ActivityProgressItem = {
   description: string | null
   points: number
   isActive: boolean
+  hasCorrectAnswer: boolean
   activityTypeCode: 'MANUAL' | 'LINK_BASED' | string
   completionId: string | null
   completedAt: string | null
@@ -152,6 +166,7 @@ export type ActivityProgressItem = {
   submissionId: string | null
   submissionStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | null
   submittedLink: string | null
+  submittedText: string | null
   submittedAt: string | null
 }
 
@@ -197,6 +212,7 @@ export type CreateActivityTypePayload = {
   description?: string
   points: number
   activityTypeId: string
+  correctAnswerCanonical?: string
   isActive?: boolean
 }
 
@@ -206,9 +222,11 @@ export type MarkCompletionPayload = {
   note?: string
 }
 
-export type SubmitActivityLinkPayload = {
+export type SubmitActivityPayload = {
   activityId: string
-  submissionLink: string
+  submissionLink?: string
+  submissionText?: string
+  answerText?: string
 }
 
 export type AdjustPointsPayload = {
@@ -238,7 +256,8 @@ export type ActivitySubmission = {
   activityId: string
   activityName: string
   points: number
-  submissionLink: string
+  submissionLink?: string | null
+  submissionText?: string | null
   status: 'PENDING' | 'APPROVED' | 'REJECTED'
   submittedAt: string
   reviewedAt?: string | null

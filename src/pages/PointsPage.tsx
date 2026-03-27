@@ -18,6 +18,7 @@ export function PointsPage() {
     const [loading, setLoading] = useState(true)
     const [errorMessage, setErrorMessage] = useState('')
     const [submissionLinks, setSubmissionLinks] = useState<Record<string, string>>({})
+    const [submissionTexts, setSubmissionTexts] = useState<Record<string, string>>({})
     const [submittingActivityId, setSubmittingActivityId] = useState<string | null>(null)
     const [submissionDialog, setSubmissionDialog] = useState<SubmissionDialogState>({
         isOpen: false,
@@ -58,36 +59,47 @@ export function PointsPage() {
         [activities],
     )
 
-    const onSubmitLink = async (event: FormEvent, activityId: string) => {
+    const onSubmitActivity = async (event: FormEvent, item: ActivityProgressItem) => {
         event.preventDefault()
         if (!accessToken) return
 
-        const link = (submissionLinks[activityId] || '').trim()
-        if (!link) return
+        const isLinkBased = item.activityTypeCode === 'LINK_BASED'
+        const isCorrectAnswer = item.activityTypeCode === 'CORRECT_ANSWER'
+        const textInput = (submissionTexts[item.id] || '').trim()
+        const linkInput = (submissionLinks[item.id] || '').trim()
+
+        if (isLinkBased && !linkInput) return
+        if (!isLinkBased && !textInput) return
 
         try {
-            setSubmittingActivityId(activityId)
+            setSubmittingActivityId(item.id)
             setSubmissionDialog({
                 isOpen: true,
                 status: 'loading',
-                title: 'Submitting Link',
-                detail: 'Please wait while we submit your activity link for review...',
+                title: isCorrectAnswer ? 'Checking Answer' : 'Submitting Activity',
+                detail: isCorrectAnswer
+                    ? 'Please wait while we validate your answer...'
+                    : 'Please wait while we submit your activity for review...',
             })
-            await api.submitMyActivityLink(accessToken, {
-                activityId,
-                submissionLink: link,
+            await api.submitMyActivity(accessToken, {
+                activityId: item.id,
+                submissionLink: isLinkBased ? linkInput : undefined,
+                submissionText: !isLinkBased && !isCorrectAnswer ? textInput : undefined,
+                answerText: isCorrectAnswer ? textInput : undefined,
             })
             const activitiesData = await api.getMyActivityProgress(accessToken)
             setActivities(activitiesData)
-            setSubmissionLinks((prev) => ({ ...prev, [activityId]: '' }))
+            setSubmissionLinks((prev) => ({ ...prev, [item.id]: '' }))
+            setSubmissionTexts((prev) => ({ ...prev, [item.id]: '' }))
             setSubmissionDialog({
                 isOpen: true,
                 status: 'success',
-                title: 'Submission Sent',
-                detail: 'Your link was submitted successfully and is now pending admin review.',
+                title: isCorrectAnswer ? 'Answer Submitted' : 'Submission Sent',
+                detail: isCorrectAnswer
+                    ? 'Your answer has been checked. Refresh status shown in the activity card.'
+                    : 'Your submission was sent successfully and is now pending admin review.',
             })
         } catch (error) {
-            setSubmitMessage(error instanceof Error ? error.message : 'Submission failed')
             setSubmissionDialog({
                 isOpen: true,
                 status: 'error',
@@ -139,6 +151,9 @@ export function PointsPage() {
                 <div className="grid">
                     {activities.map((item) => {
                         const isLinkBased = item.activityTypeCode === 'LINK_BASED'
+                        const isCorrectAnswer = item.activityTypeCode === 'CORRECT_ANSWER'
+                        const isManualText = item.activityTypeCode === 'MANUAL_TEXT_SUBMISSION'
+                        const acceptsText = isCorrectAnswer || isManualText
                         const statusLabel = item.isCompleted
                             ? 'Completed'
                             : item.submissionStatus
@@ -177,7 +192,7 @@ export function PointsPage() {
 
                                 {isLinkBased ? (
                                     <div className="stack">
-                                        <form className="actions-row" onSubmit={(event) => onSubmitLink(event, item.id)}>
+                                        <form className="actions-row" onSubmit={(event) => onSubmitActivity(event, item)}>
                                             <input
                                                 type="url"
                                                 value={submissionLinks[item.id] || ''}
@@ -203,6 +218,44 @@ export function PointsPage() {
                                         </p>
                                         <p className="tiny muted">
                                             Approved evidence: {item.approvedSubmissionLink ? <a href={item.approvedSubmissionLink} target="_blank" rel="noreferrer">Open</a> : '-'}
+                                        </p>
+                                        <p className="tiny muted">
+                                            Submitted at: {item.submittedAt ? new Date(item.submittedAt).toLocaleString() : '-'}
+                                        </p>
+                                    </div>
+                                ) : null}
+
+                                {acceptsText ? (
+                                    <div className="stack">
+                                        <form className="stack" onSubmit={(event) => onSubmitActivity(event, item)}>
+                                            <textarea
+                                                value={submissionTexts[item.id] || ''}
+                                                onChange={(event) =>
+                                                    setSubmissionTexts((prev) => ({
+                                                        ...prev,
+                                                        [item.id]: event.target.value,
+                                                    }))
+                                                }
+                                                placeholder={isCorrectAnswer ? 'Type your answer' : 'Type your manual submission text (max 300 chars)'}
+                                                maxLength={300}
+                                                rows={4}
+                                                required
+                                                disabled={!item.isActive || item.isCompleted || submittingActivityId === item.id}
+                                            />
+                                            <div className="actions-row">
+                                                <p className="tiny muted">{(submissionTexts[item.id] || '').length}/300</p>
+                                                <button
+                                                    type="submit"
+                                                    disabled={!item.isActive || item.isCompleted || !((submissionTexts[item.id] || '').trim()) || submittingActivityId === item.id}
+                                                >
+                                                    {submittingActivityId === item.id
+                                                        ? (isCorrectAnswer ? 'Checking...' : 'Submitting...')
+                                                        : (isCorrectAnswer ? 'Submit Answer' : 'Submit Text')}
+                                                </button>
+                                            </div>
+                                        </form>
+                                        <p className="tiny muted">
+                                            Latest submission text: {item.submittedText || '-'}
                                         </p>
                                         <p className="tiny muted">
                                             Submitted at: {item.submittedAt ? new Date(item.submittedAt).toLocaleString() : '-'}

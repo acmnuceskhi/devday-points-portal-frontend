@@ -207,13 +207,27 @@ export type ActivityKind = {
 }
 
 export type CreateActivityTypePayload = {
-  code: string
+  code?: string
   name: string
   description?: string
   points: number
   activityTypeId: string
   correctAnswerCanonical?: string
   isActive?: boolean
+}
+
+export type UpdateActivityPayload = {
+  name?: string
+  description?: string | null
+  points?: number
+  correctAnswerCanonical?: string | null
+}
+
+export type ActivitySubmissionListParams = {
+  activityId: string
+  limit?: number
+  offset?: number
+  status?: 'PENDING' | 'APPROVED' | 'REJECTED'
 }
 
 export type MarkCompletionPayload = {

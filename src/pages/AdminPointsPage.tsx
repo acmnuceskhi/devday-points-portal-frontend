@@ -38,6 +38,17 @@ type ActionDialogState = {
 
 const PARTICIPANT_LOOKUP_LIMIT = 100
 
+const makeActivityCodePreview = (name: string) => {
+    const base = name
+        .trim()
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, '_')
+        .replace(/_+/g, '_')
+        .replace(/^_+|_+$/g, '')
+
+    return base || 'ACTIVITY'
+}
+
 export function AdminPointsPage() {
     const { accessToken, staffProfile, logout } = useAdminAuth()
     const navigate = useNavigate()
@@ -58,7 +69,6 @@ export function AdminPointsPage() {
     const [initialLoadError, setInitialLoadError] = useState('')
     const [submissionNotes, setSubmissionNotes] = useState<Record<string, string>>({})
 
-    const [newActivityCode, setNewActivityCode] = useState('')
     const [newActivityName, setNewActivityName] = useState('')
     const [newActivityDescription, setNewActivityDescription] = useState('')
     const [newActivityPoints, setNewActivityPoints] = useState('5')
@@ -77,6 +87,14 @@ export function AdminPointsPage() {
         status: 'loading',
         detail: '',
     })
+    const [editingActivityId, setEditingActivityId] = useState('')
+    const [editActivityName, setEditActivityName] = useState('')
+    const [editActivityPoints, setEditActivityPoints] = useState('')
+    const [editActivityDescription, setEditActivityDescription] = useState('')
+    const [reviewActivityId, setReviewActivityId] = useState('')
+    const [reviewStatusFilter, setReviewStatusFilter] = useState<'PENDING' | 'APPROVED' | 'REJECTED' | ''>('PENDING')
+    const [activitySubmissions, setActivitySubmissions] = useState<ActivitySubmission[]>([])
+    const [activitySubmissionsLoading, setActivitySubmissionsLoading] = useState(false)
 
     const openActionDialog = (title: string, detail = 'Please wait while we process your request...') => {
         setDialogState({ isOpen: true, title, status: 'loading', detail })
@@ -143,6 +161,40 @@ export function AdminPointsPage() {
         setParticipantDetail({ ...detail, pendingSubmissions: pending })
     }
 
+    const refreshSelectedParticipantDetails = async () => {
+        if (!selectedParticipantId) return
+
+        setParticipantDetailLoading(true)
+        setParticipantDetailError('')
+        try {
+            await refreshParticipantDetails(selectedParticipantId)
+        } catch (error) {
+            setParticipantDetailError(error instanceof Error ? error.message : 'Could not refresh participant details')
+        } finally {
+            setParticipantDetailLoading(false)
+        }
+    }
+
+    const loadSubmissionsByActivity = async () => {
+        if (!accessToken || !reviewActivityId) {
+            setActivitySubmissions([])
+            return
+        }
+
+        setActivitySubmissionsLoading(true)
+        try {
+            const rows = await api.getAdminSubmissionsByActivity(accessToken, {
+                activityId: reviewActivityId,
+                status: reviewStatusFilter || undefined,
+                limit: 100,
+                offset: 0,
+            })
+            setActivitySubmissions(rows)
+        } finally {
+            setActivitySubmissionsLoading(false)
+        }
+    }
+
     useEffect(() => {
         async function load() {
             if (!accessToken) return
@@ -194,6 +246,15 @@ export function AdminPointsPage() {
         }
     }, [accessToken, selectedParticipantId])
 
+    useEffect(() => {
+        if (!accessToken || !reviewActivityId) {
+            setActivitySubmissions([])
+            return
+        }
+
+        void loadSubmissionsByActivity()
+    }, [accessToken, reviewActivityId, reviewStatusFilter])
+
     const filteredParticipants = useMemo(() => {
         const needle = participantSearch.trim().toLowerCase()
         if (!needle) return participants.slice(0, 20)
@@ -224,6 +285,8 @@ export function AdminPointsPage() {
         [participants, selectedParticipantId],
     )
 
+    const newActivityCodePreview = useMemo(() => makeActivityCodePreview(newActivityName), [newActivityName])
+
     const onLogout = () => {
         logout()
         navigate('/admin/login', { replace: true })
@@ -236,7 +299,6 @@ export function AdminPointsPage() {
         try {
             openActionDialog('Creating Activity')
             await api.createAdminActivityType(accessToken, {
-                code: newActivityCode.trim().toUpperCase(),
                 name: newActivityName.trim(),
                 description: newActivityDescription.trim() || undefined,
                 points: Number(newActivityPoints),
@@ -248,7 +310,6 @@ export function AdminPointsPage() {
                 isActive: true,
             })
             await refreshGlobalData()
-            setNewActivityCode('')
             setNewActivityName('')
             setNewActivityDescription('')
             setNewActivityPoints('5')
@@ -256,6 +317,41 @@ export function AdminPointsPage() {
             showActionSuccess('Activity Created', 'Activity was created successfully.')
         } catch (error) {
             showActionError('Could Not Create Activity', error instanceof Error ? error.message : 'Create failed')
+        }
+    }
+
+    const onStartEditActivity = (activity: ActivityType) => {
+        setEditingActivityId(activity.id)
+        setEditActivityName(activity.name)
+        setEditActivityPoints(String(activity.points))
+        setEditActivityDescription(activity.description || '')
+    }
+
+    const onCancelEditActivity = () => {
+        setEditingActivityId('')
+        setEditActivityName('')
+        setEditActivityPoints('')
+        setEditActivityDescription('')
+    }
+
+    const onSaveEditActivity = async () => {
+        if (!accessToken || !editingActivityId) return
+
+        try {
+            openActionDialog('Updating Activity')
+            await api.updateAdminActivityType(accessToken, editingActivityId, {
+                name: editActivityName.trim(),
+                points: Number(editActivityPoints),
+                description: editActivityDescription.trim() || null,
+            })
+            await refreshGlobalData()
+            if (reviewActivityId) {
+                await loadSubmissionsByActivity()
+            }
+            onCancelEditActivity()
+            showActionSuccess('Activity Updated', 'Activity details were updated successfully.')
+        } catch (error) {
+            showActionError('Could Not Update Activity', error instanceof Error ? error.message : 'Update failed')
         }
     }
 
@@ -315,12 +411,17 @@ export function AdminPointsPage() {
     }
 
     const onApproveSubmission = async (submission: ActivitySubmission) => {
-        if (!accessToken || !selectedParticipantId) return
+        if (!accessToken) return
 
         try {
             openActionDialog('Approving Submission')
             await api.approveAdminSubmission(accessToken, submission.id, submissionNotes[submission.id]?.trim() || undefined)
-            await refreshParticipantDetails(selectedParticipantId)
+            if (selectedParticipantId && submission.participantId === selectedParticipantId) {
+                await refreshSelectedParticipantDetails()
+            }
+            if (reviewActivityId) {
+                await loadSubmissionsByActivity()
+            }
             await refreshGlobalData()
             showActionSuccess('Submission Approved', 'Submission approved and points awarded.')
         } catch (error) {
@@ -329,12 +430,17 @@ export function AdminPointsPage() {
     }
 
     const onRejectSubmission = async (submission: ActivitySubmission) => {
-        if (!accessToken || !selectedParticipantId) return
+        if (!accessToken) return
 
         try {
             openActionDialog('Rejecting Submission')
             await api.rejectAdminSubmission(accessToken, submission.id, submissionNotes[submission.id]?.trim() || 'Rejected by admin')
-            await refreshParticipantDetails(selectedParticipantId)
+            if (selectedParticipantId && submission.participantId === selectedParticipantId) {
+                await refreshSelectedParticipantDetails()
+            }
+            if (reviewActivityId) {
+                await loadSubmissionsByActivity()
+            }
             await refreshGlobalData()
             showActionSuccess('Submission Rejected', 'Submission has been rejected and logged.')
         } catch (error) {
@@ -496,13 +602,28 @@ export function AdminPointsPage() {
 
                         {activeParticipantWorkflowTab === 'participant-info' ? (
                             <article className={`card selected-participant-card ${selectedParticipant ? 'active' : ''}`}>
-                                <p className="tiny muted">Current Participant</p>
-                                {participantDetailLoading ? (
+                                <div className="actions-row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <p className="tiny muted">Current Participant</p>
                                     <div className="actions-row">
-                                        <div className="admin-spinner" aria-hidden="true" />
-                                        <p className="muted">Loading participant details...</p>
+                                        {participantDetailLoading ? (
+                                            <>
+                                                <div className="admin-spinner" aria-hidden="true" />
+                                                <span className="tiny muted">Refreshing...</span>
+                                            </>
+                                        ) : null}
+                                        <button
+                                            type="button"
+                                            className="outline-button"
+                                            disabled={!selectedParticipantId || participantDetailLoading}
+                                            onClick={() => {
+                                                void refreshSelectedParticipantDetails()
+                                            }}
+                                        >
+                                            Refresh
+                                        </button>
                                     </div>
-                                ) : participantDetailError ? (
+                                </div>
+                                {participantDetailError ? (
                                     <div className="error-banner">{participantDetailError}</div>
                                 ) : participantDetail ? (
                                     <div className="data-list compact">
@@ -743,17 +864,17 @@ export function AdminPointsPage() {
                                 <h3>Create Activity</h3>
                                 <form className="grid two" onSubmit={onCreateActivity}>
                                     <input
-                                        value={newActivityCode}
-                                        onChange={(event) => setNewActivityCode(event.target.value)}
-                                        placeholder="Code (e.g. BOOTH_VISIT)"
-                                        required
-                                    />
-                                    <input
                                         value={newActivityName}
                                         onChange={(event) => setNewActivityName(event.target.value)}
                                         placeholder="Name"
                                         required
                                     />
+                                    <div className="card" style={{ margin: 0, padding: 10 }}>
+                                        <p className="tiny muted" style={{ marginBottom: 4 }}>
+                                            Code preview (auto-generated)
+                                        </p>
+                                        <strong>{newActivityCodePreview}</strong>
+                                    </div>
                                     <select
                                         value={newActivityTypeId}
                                         onChange={(event) => setNewActivityTypeId(event.target.value)}
@@ -801,21 +922,186 @@ export function AdminPointsPage() {
                                             <th>Name</th>
                                             <th>Type</th>
                                             <th>Points</th>
+                                            <th>Description</th>
                                             <th>Status</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {activities.map((item) => (
                                             <tr key={item.id}>
                                                 <td>{item.code}</td>
-                                                <td>{item.name}</td>
+                                                <td>
+                                                    {editingActivityId === item.id ? (
+                                                        <input
+                                                            value={editActivityName}
+                                                            onChange={(event) => setEditActivityName(event.target.value)}
+                                                            placeholder="Activity name"
+                                                        />
+                                                    ) : (
+                                                        item.name
+                                                    )}
+                                                </td>
                                                 <td>{item.activityTypeCode}</td>
-                                                <td>{item.points}</td>
+                                                <td>
+                                                    {editingActivityId === item.id ? (
+                                                        <input
+                                                            type="number"
+                                                            min={1}
+                                                            max={1000}
+                                                            value={editActivityPoints}
+                                                            onChange={(event) => setEditActivityPoints(event.target.value)}
+                                                        />
+                                                    ) : (
+                                                        item.points
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    {editingActivityId === item.id ? (
+                                                        <input
+                                                            value={editActivityDescription}
+                                                            onChange={(event) => setEditActivityDescription(event.target.value)}
+                                                            placeholder="Description"
+                                                        />
+                                                    ) : (
+                                                        item.description || '-'
+                                                    )}
+                                                </td>
                                                 <td>{item.isActive ? 'Active' : 'Inactive'}</td>
+                                                <td>
+                                                    <div className="actions-row">
+                                                        {editingActivityId === item.id ? (
+                                                            <>
+                                                                <button type="button" onClick={() => void onSaveEditActivity()}>
+                                                                    Save
+                                                                </button>
+                                                                <button type="button" className="outline-button" onClick={onCancelEditActivity}>
+                                                                    Cancel
+                                                                </button>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <button type="button" onClick={() => onStartEditActivity(item)}>
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    className="outline-button"
+                                                                    onClick={() => {
+                                                                        setReviewActivityId(item.id)
+                                                                        setReviewStatusFilter('PENDING')
+                                                                    }}
+                                                                >
+                                                                    Review Submissions
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
+                            </article>
+
+                            <article className="card table-wrap admin-flow-card stack">
+                                <h3>Submissions By Activity</h3>
+                                <div className="grid two" style={{ alignItems: 'end' }}>
+                                    <select value={reviewActivityId} onChange={(event) => setReviewActivityId(event.target.value)}>
+                                        <option value="">Select Activity</option>
+                                        {activityOptions.map((option) => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <select
+                                        value={reviewStatusFilter}
+                                        onChange={(event) =>
+                                            setReviewStatusFilter(event.target.value as 'PENDING' | 'APPROVED' | 'REJECTED' | '')
+                                        }
+                                    >
+                                        <option value="">All Statuses</option>
+                                        <option value="PENDING">Pending</option>
+                                        <option value="APPROVED">Approved</option>
+                                        <option value="REJECTED">Rejected</option>
+                                    </select>
+                                </div>
+
+                                {!reviewActivityId ? (
+                                    <p className="muted">Select an activity to review its submissions.</p>
+                                ) : (
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Participant</th>
+                                                <th>Submission</th>
+                                                <th>Status</th>
+                                                <th>Submitted At</th>
+                                                <th>Review Note</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {activitySubmissions.map((submission) => (
+                                                <tr key={submission.id}>
+                                                    <td>
+                                                        <strong>{submission.fullName || submission.participantId}</strong>
+                                                        <div className="tiny muted">{submission.institution || submission.email || '-'}</div>
+                                                    </td>
+                                                    <td>
+                                                        {submission.submissionLink ? (
+                                                            <a href={submission.submissionLink} target="_blank" rel="noreferrer">
+                                                                Open Link
+                                                            </a>
+                                                        ) : (
+                                                            submission.submissionText || '-'
+                                                        )}
+                                                    </td>
+                                                    <td>{submission.status}</td>
+                                                    <td>{new Date(submission.submittedAt).toLocaleString()}</td>
+                                                    <td>
+                                                        <input
+                                                            value={submissionNotes[submission.id] || submission.reviewNote || ''}
+                                                            onChange={(event) =>
+                                                                setSubmissionNotes((prev) => ({ ...prev, [submission.id]: event.target.value }))
+                                                            }
+                                                            placeholder="Review note"
+                                                        />
+                                                    </td>
+                                                    <td>
+                                                        <div className="actions-row">
+                                                            <button
+                                                                type="button"
+                                                                disabled={submission.status === 'APPROVED'}
+                                                                onClick={() => onApproveSubmission(submission)}
+                                                            >
+                                                                Approve
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className="outline-button"
+                                                                disabled={submission.status === 'REJECTED'}
+                                                                onClick={() => onRejectSubmission(submission)}
+                                                            >
+                                                                Reject
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                            {!activitySubmissions.length ? (
+                                                <tr>
+                                                    <td colSpan={6} className="muted">
+                                                        {activitySubmissionsLoading
+                                                            ? 'Loading submissions...'
+                                                            : 'No submissions match this activity and status.'}
+                                                    </td>
+                                                </tr>
+                                            ) : null}
+                                        </tbody>
+                                    </table>
+                                )}
                             </article>
                         </div>
                     </div>

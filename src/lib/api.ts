@@ -1,6 +1,7 @@
 import type {
   ActivityKind,
   ActivitySubmission,
+  ActivitySubmissionListParams,
   AdminLoginResponse,
   AdminParticipantDetail,
   ActivityType,
@@ -14,6 +15,7 @@ import type {
   SignupRequestResponse,
   SignupVerifyResponse,
   SubmitActivityPayload,
+  UpdateActivityPayload,
   ParticipantCompetition,
   ParticipantProfile,
   PointsAuditLog,
@@ -136,6 +138,13 @@ export const api = {
       body: payload,
     })
   },
+  updateAdminActivityType(accessToken: string, activityId: string, payload: UpdateActivityPayload) {
+    return request<ActivityType>(`/points/admin/activities/${activityId}`, {
+      method: 'PATCH',
+      accessToken,
+      body: payload,
+    })
+  },
   markAdminCompletion(accessToken: string, payload: MarkCompletionPayload) {
     return request('/points/admin/completions', {
       method: 'POST',
@@ -168,6 +177,20 @@ export const api = {
       params.set('participantId', participantId)
     }
     return request<ActivitySubmission[]>(`/points/admin/submissions/pending?${params.toString()}`, {
+      accessToken,
+    })
+  },
+  getAdminSubmissionsByActivity(accessToken: string, params: ActivitySubmissionListParams) {
+    const query = new URLSearchParams({
+      activityId: params.activityId,
+      limit: String(params.limit ?? 50),
+      offset: String(params.offset ?? 0),
+    })
+    if (params.status) {
+      query.set('status', params.status)
+    }
+
+    return request<ActivitySubmission[]>(`/points/admin/submissions/by-activity?${query.toString()}`, {
       accessToken,
     })
   },

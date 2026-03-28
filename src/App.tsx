@@ -9,6 +9,8 @@ import { NotFoundPage } from './pages/NotFoundPage'
 import { AdminPointsPage } from './pages/AdminPointsPage'
 import { PointsPage } from './pages/PointsPage'
 import { RankingsPage } from './pages/RankingsPage'
+import { SignupPage } from './pages/SignupPage'
+import { SignupVerifyPage } from './pages/SignupVerifyPage'
 import { TeamDetailPage } from './pages/TeamDetailPage'
 
 function App() {
@@ -16,6 +18,8 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/signup/verify" element={<SignupVerifyPage />} />
         <Route
           path="/"
           element={

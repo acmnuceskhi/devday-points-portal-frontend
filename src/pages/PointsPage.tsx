@@ -20,6 +20,7 @@ export function PointsPage() {
     const [submissionLinks, setSubmissionLinks] = useState<Record<string, string>>({})
     const [submissionTexts, setSubmissionTexts] = useState<Record<string, string>>({})
     const [submittingActivityId, setSubmittingActivityId] = useState<string | null>(null)
+    const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null)
     const [submissionDialog, setSubmissionDialog] = useState<SubmissionDialogState>({
         isOpen: false,
         status: 'loading',
@@ -57,6 +58,11 @@ export function PointsPage() {
     const completedCount = useMemo(
         () => activities.filter((item) => item.isCompleted).length,
         [activities],
+    )
+
+    const selectedActivity = useMemo(
+        () => activities.find((item) => item.id === selectedActivityId) || null,
+        [activities, selectedActivityId],
     )
 
     const onSubmitActivity = async (event: FormEvent, item: ActivityProgressItem) => {
@@ -116,6 +122,14 @@ export function PointsPage() {
         setSubmissionDialog((prev) => ({ ...prev, isOpen: false }))
     }
 
+    const openActivityDialog = (activityId: string) => {
+        setSelectedActivityId(activityId)
+    }
+
+    const closeActivityDialog = () => {
+        setSelectedActivityId(null)
+    }
+
     if (loading) {
         return <div className="center-state">Loading points...</div>
     }
@@ -150,10 +164,6 @@ export function PointsPage() {
                 <h3>Your Activities</h3>
                 <div className="grid">
                     {activities.map((item) => {
-                        const isLinkBased = item.activityTypeCode === 'LINK_BASED'
-                        const isCorrectAnswer = item.activityTypeCode === 'CORRECT_ANSWER'
-                        const isManualText = item.activityTypeCode === 'MANUAL_TEXT_SUBMISSION'
-                        const acceptsText = isCorrectAnswer || isManualText
                         const statusLabel = item.isCompleted
                             ? 'Completed'
                             : item.submissionStatus
@@ -163,110 +173,101 @@ export function PointsPage() {
                                     : 'Inactive'
 
                         return (
-                            <details key={item.id} className="card">
-                                <summary className="section-head" style={{ cursor: 'pointer', listStyle: 'none' }}>
+                            <article key={item.id} className="card stack" style={{ minHeight: 170 }}>
+                                <div className="section-head">
                                     <strong>{item.name}</strong>
                                     <span className="status">{statusLabel}</span>
-                                </summary>
-
-                                <div className="data-list compact">
-                                    <div>
-                                        <dt>Points</dt>
-                                        <dd>{item.points}</dd>
-                                    </div>
-                                    <div>
-                                        <dt>Type</dt>
-                                        <dd>{item.activityTypeCode}</dd>
-                                    </div>
-                                    <div>
-                                        <dt>Completed At</dt>
-                                        <dd>{item.completedAt ? new Date(item.completedAt).toLocaleString() : '-'}</dd>
-                                    </div>
-                                    <div>
-                                        <dt>Submission Status</dt>
-                                        <dd>{item.submissionStatus || '-'}</dd>
-                                    </div>
                                 </div>
-
-                                {item.description ? <p className="muted tiny">{item.description}</p> : null}
-
-                                {isLinkBased ? (
-                                    <div className="stack">
-                                        <form className="actions-row" onSubmit={(event) => onSubmitActivity(event, item)}>
-                                            <input
-                                                type="url"
-                                                value={submissionLinks[item.id] || ''}
-                                                onChange={(event) =>
-                                                    setSubmissionLinks((prev) => ({
-                                                        ...prev,
-                                                        [item.id]: event.target.value,
-                                                    }))
-                                                }
-                                                placeholder="Submission URL"
-                                                required
-                                                disabled={!item.isActive || item.isCompleted || submittingActivityId === item.id}
-                                            />
-                                            <button
-                                                type="submit"
-                                                disabled={!item.isActive || item.isCompleted || !((submissionLinks[item.id] || '').trim()) || submittingActivityId === item.id}
-                                            >
-                                                {submittingActivityId === item.id ? 'Submitting...' : 'Submit Link'}
-                                            </button>
-                                        </form>
-                                        <p className="tiny muted">
-                                            Latest submission link: {item.submittedLink ? <a href={item.submittedLink} target="_blank" rel="noreferrer">Open</a> : '-'}
-                                        </p>
-                                        <p className="tiny muted">
-                                            Approved evidence: {item.approvedSubmissionLink ? <a href={item.approvedSubmissionLink} target="_blank" rel="noreferrer">Open</a> : '-'}
-                                        </p>
-                                        <p className="tiny muted">
-                                            Submitted at: {item.submittedAt ? new Date(item.submittedAt).toLocaleString() : '-'}
-                                        </p>
-                                    </div>
-                                ) : null}
-
-                                {acceptsText ? (
-                                    <div className="stack">
-                                        <form className="stack" onSubmit={(event) => onSubmitActivity(event, item)}>
-                                            <textarea
-                                                value={submissionTexts[item.id] || ''}
-                                                onChange={(event) =>
-                                                    setSubmissionTexts((prev) => ({
-                                                        ...prev,
-                                                        [item.id]: event.target.value,
-                                                    }))
-                                                }
-                                                placeholder={isCorrectAnswer ? 'Type your answer' : 'Type your manual submission text (max 300 chars)'}
-                                                maxLength={300}
-                                                rows={4}
-                                                required
-                                                disabled={!item.isActive || item.isCompleted || submittingActivityId === item.id}
-                                            />
-                                            <div className="actions-row">
-                                                <p className="tiny muted">{(submissionTexts[item.id] || '').length}/300</p>
-                                                <button
-                                                    type="submit"
-                                                    disabled={!item.isActive || item.isCompleted || !((submissionTexts[item.id] || '').trim()) || submittingActivityId === item.id}
-                                                >
-                                                    {submittingActivityId === item.id
-                                                        ? (isCorrectAnswer ? 'Checking...' : 'Submitting...')
-                                                        : (isCorrectAnswer ? 'Submit Answer' : 'Submit Text')}
-                                                </button>
-                                            </div>
-                                        </form>
-                                        <p className="tiny muted">
-                                            Latest submission text: {item.submittedText || '-'}
-                                        </p>
-                                        <p className="tiny muted">
-                                            Submitted at: {item.submittedAt ? new Date(item.submittedAt).toLocaleString() : '-'}
-                                        </p>
-                                    </div>
-                                ) : null}
-                            </details>
+                                <p className="muted tiny">{item.activityTypeCode}</p>
+                                <p className="muted tiny">Points: {item.points}</p>
+                                <button type="button" onClick={() => openActivityDialog(item.id)}>
+                                    View Details
+                                </button>
+                            </article>
                         )
                     })}
                 </div>
             </section>
+
+            {selectedActivity ? (
+                <div className="admin-dialog-backdrop" role="presentation" onClick={closeActivityDialog}>
+                    <div className="admin-dialog" role="dialog" aria-live="polite" onClick={(event) => event.stopPropagation()}>
+                        <h3>{selectedActivity.name}</h3>
+                        <p className="muted tiny">{selectedActivity.activityTypeCode}</p>
+                        <p className="muted tiny">{selectedActivity.description || 'No description'}</p>
+                        <div className="data-list compact">
+                            <div>
+                                <dt>Points</dt>
+                                <dd>{selectedActivity.points}</dd>
+                            </div>
+                            <div>
+                                <dt>Status</dt>
+                                <dd>{selectedActivity.submissionStatus || (selectedActivity.isCompleted ? 'COMPLETED' : 'PENDING')}</dd>
+                            </div>
+                            <div>
+                                <dt>Completed At</dt>
+                                <dd>{selectedActivity.completedAt ? new Date(selectedActivity.completedAt).toLocaleString() : '-'}</dd>
+                            </div>
+                        </div>
+
+                        {selectedActivity.activityTypeCode === 'LINK_BASED' ? (
+                            <form className="actions-row" onSubmit={(event) => onSubmitActivity(event, selectedActivity)}>
+                                <input
+                                    type="url"
+                                    value={submissionLinks[selectedActivity.id] || ''}
+                                    onChange={(event) =>
+                                        setSubmissionLinks((prev) => ({
+                                            ...prev,
+                                            [selectedActivity.id]: event.target.value,
+                                        }))
+                                    }
+                                    placeholder="Submission URL"
+                                    required
+                                    disabled={!selectedActivity.isActive || selectedActivity.isCompleted || submittingActivityId === selectedActivity.id}
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={!selectedActivity.isActive || selectedActivity.isCompleted || !((submissionLinks[selectedActivity.id] || '').trim()) || submittingActivityId === selectedActivity.id}
+                                >
+                                    {submittingActivityId === selectedActivity.id ? 'Submitting...' : 'Submit Link'}
+                                </button>
+                            </form>
+                        ) : null}
+
+                        {(selectedActivity.activityTypeCode === 'CORRECT_ANSWER' || selectedActivity.activityTypeCode === 'MANUAL_TEXT_SUBMISSION') ? (
+                            <form className="stack" onSubmit={(event) => onSubmitActivity(event, selectedActivity)}>
+                                <textarea
+                                    value={submissionTexts[selectedActivity.id] || ''}
+                                    onChange={(event) =>
+                                        setSubmissionTexts((prev) => ({
+                                            ...prev,
+                                            [selectedActivity.id]: event.target.value,
+                                        }))
+                                    }
+                                    placeholder={selectedActivity.activityTypeCode === 'CORRECT_ANSWER' ? 'Type your answer' : 'Type your submission text (max 300 chars)'}
+                                    maxLength={300}
+                                    rows={5}
+                                    required
+                                    disabled={!selectedActivity.isActive || selectedActivity.isCompleted || submittingActivityId === selectedActivity.id}
+                                />
+                                <div className="actions-row">
+                                    <p className="tiny muted">{(submissionTexts[selectedActivity.id] || '').length}/300</p>
+                                    <button
+                                        type="submit"
+                                        disabled={!selectedActivity.isActive || selectedActivity.isCompleted || !((submissionTexts[selectedActivity.id] || '').trim()) || submittingActivityId === selectedActivity.id}
+                                    >
+                                        {submittingActivityId === selectedActivity.id ? 'Submitting...' : (selectedActivity.activityTypeCode === 'CORRECT_ANSWER' ? 'Submit Answer' : 'Submit Text')}
+                                    </button>
+                                </div>
+                            </form>
+                        ) : null}
+
+                        <button type="button" className="outline-button" onClick={closeActivityDialog}>
+                            Close
+                        </button>
+                    </div>
+                </div>
+            ) : null}
 
             {submissionDialog.isOpen ? (
                 <div className="admin-dialog-backdrop" role="presentation">

@@ -210,6 +210,22 @@
         @apply overflow-x-auto;
     }
 
+    .table-scroll-y {
+        max-height: 440px;
+        overflow: auto;
+    }
+
+    .table-scroll-y table {
+        min-width: 100%;
+    }
+
+    .table-scroll-y thead th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: #231414;
+    }
+
     .center-state {
         @apply grid min-h-40 place-content-center gap-2 text-center text-[#cdcdcd];
     }

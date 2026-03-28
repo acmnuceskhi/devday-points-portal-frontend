@@ -31,7 +31,7 @@ export function RankingsPage() {
             {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
 
             {!loading && !errorMessage ? (
-                <div className="card table-wrap">
+                <div className="card table-wrap table-scroll-y">
                     <table>
                         <thead>
                             <tr>

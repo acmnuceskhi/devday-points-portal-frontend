@@ -1,6 +1,8 @@
 export type ApiErrorResponse = {
   error?: {
     message?: string
+    code?: string | null
+    status?: number
     details?: unknown
   }
 }

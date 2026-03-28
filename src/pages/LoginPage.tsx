@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 export function LoginPage() {
     const { isAuthenticated, login } = useAuth()
     const navigate = useNavigate()
+    const [searchParams] = useSearchParams()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -16,6 +17,13 @@ export function LoginPage() {
             navigate('/', { replace: true })
         }
     }, [isAuthenticated, navigate])
+
+    useEffect(() => {
+        const initialEmail = searchParams.get('email')?.trim() || ''
+        if (initialEmail) {
+            setEmail(initialEmail)
+        }
+    }, [searchParams])
 
     const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault()

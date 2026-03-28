@@ -1,4 +1,5 @@
 import type {
+  ApiErrorResponse,
   ActivityKind,
   ActivitySubmission,
   ActivitySubmissionListParams,
@@ -35,6 +36,20 @@ type RequestOptions = {
   accessToken?: string | null
 }
 
+export class ApiRequestError extends Error {
+  code: string | null
+  status: number | null
+  details: unknown
+
+  constructor(message: string, options: { code?: string | null; status?: number | null; details?: unknown } = {}) {
+    super(message)
+    this.name = 'ApiRequestError'
+    this.code = options.code ?? null
+    this.status = options.status ?? null
+    this.details = options.details
+  }
+}
+
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -52,17 +67,19 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   if (!response.ok) {
     let message = `Request failed with status ${response.status}`
+    let code: string | null = null
+    let details: unknown = null
     try {
-      const body = (await response.json()) as {
-        error?: { message?: string }
-      }
+      const body = (await response.json()) as ApiErrorResponse
       if (body.error?.message) {
         message = body.error.message
       }
+      code = body.error?.code ?? null
+      details = body.error?.details ?? null
     } catch {
       // Keep fallback message when backend returns non-JSON body.
     }
-    throw new Error(message)
+    throw new ApiRequestError(message, { code, status: response.status, details })
   }
 
   return response.json() as Promise<T>
@@ -194,6 +211,12 @@ export const api = {
     return request<ActivitySubmission[]>(`/points/admin/submissions/by-activity?${query.toString()}`, {
       accessToken,
     })
+  },
+  getAdminLatestParticipantActivitySubmission(accessToken: string, participantId: string, activityId: string) {
+    return request<ActivitySubmission | null>(
+      `/points/admin/participants/${participantId}/activities/${activityId}/submission-latest`,
+      { accessToken },
+    )
   },
   getAdminCompetitionActivityPointsConfig(accessToken: string) {
     return request<CompetitionActivityPointsConfig>('/points/admin/config/competition-activity-points', {

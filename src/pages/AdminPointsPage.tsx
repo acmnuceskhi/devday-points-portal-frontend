@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAdminAuth } from '../context/AdminAuthContext'
@@ -8,6 +8,8 @@ import type {
     ActivitySubmission,
     ActivityType,
     AdminParticipantDetail,
+    Competition,
+    CompetitionActivityPointsConfig,
     PointsAuditLog,
     PointsLeaderboardItem,
     RankingItem,
@@ -95,6 +97,11 @@ export function AdminPointsPage() {
     const [reviewStatusFilter, setReviewStatusFilter] = useState<'PENDING' | 'APPROVED' | 'REJECTED' | ''>('PENDING')
     const [activitySubmissions, setActivitySubmissions] = useState<ActivitySubmission[]>([])
     const [activitySubmissionsLoading, setActivitySubmissionsLoading] = useState(false)
+    const [competitionList, setCompetitionList] = useState<Competition[]>([])
+    const [competitionPointsConfig, setCompetitionPointsConfig] = useState<CompetitionActivityPointsConfig | null>(null)
+    const [competitionPointsDefaultInput, setCompetitionPointsDefaultInput] = useState('0')
+    const [competitionOverrideInputs, setCompetitionOverrideInputs] = useState<Record<string, string>>({})
+    const submissionsByActivityRef = useRef<HTMLElement | null>(null)
 
     const openActionDialog = (title: string, detail = 'Please wait while we process your request...') => {
         setDialogState({ isOpen: true, title, status: 'loading', detail })
@@ -111,6 +118,16 @@ export function AdminPointsPage() {
     const closeDialog = () => {
         if (dialogState.status === 'loading') return
         setDialogState((prev) => ({ ...prev, isOpen: false }))
+    }
+
+    const applyCompetitionPointsConfig = (config: CompetitionActivityPointsConfig) => {
+        setCompetitionPointsConfig(config)
+        setCompetitionPointsDefaultInput(String(config.globalDefaultPoints ?? 0))
+        const nextOverrides: Record<string, string> = {}
+        for (const item of config.overrides) {
+            nextOverrides[item.competitionId] = String(item.points ?? '')
+        }
+        setCompetitionOverrideInputs(nextOverrides)
     }
 
     const toParticipantLookup = (items: Array<RankingItem | PointsLeaderboardItem>): ParticipantLookup[] => {
@@ -131,18 +148,22 @@ export function AdminPointsPage() {
     const refreshGlobalData = async () => {
         if (!accessToken) return
 
-        const [activityData, kindsData, auditData, rankingsResult, leaderboardResult] = await Promise.all([
+        const [activityData, kindsData, auditData, rankingsResult, leaderboardResult, competitionData, pointsConfig] = await Promise.all([
             api.getAdminActivityTypes(accessToken, true),
             api.getAdminActivityKinds(accessToken),
             api.getAdminAuditLogs(accessToken, 30, 0),
             api.getRankings(PARTICIPANT_LOOKUP_LIMIT, 0),
             api.getPointsLeaderboard(PARTICIPANT_LOOKUP_LIMIT, 0),
+            api.getCompetitions(true),
+            api.getAdminCompetitionActivityPointsConfig(accessToken),
         ])
 
         setActivities(activityData)
         setActivityKinds(kindsData)
         setAuditLogs(auditData)
+        setCompetitionList(competitionData)
         setParticipants(toParticipantLookup([...rankingsResult.items, ...leaderboardResult.items]))
+        applyCompetitionPointsConfig(pointsConfig)
 
         if (!newActivityTypeId && kindsData[0]) {
             setNewActivityTypeId(kindsData[0].id)
@@ -448,6 +469,55 @@ export function AdminPointsPage() {
         }
     }
 
+    const scrollToSubmissionsByActivity = () => {
+        requestAnimationFrame(() => {
+            submissionsByActivityRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        })
+    }
+
+    const onUpdateCompetitionDefaultPoints = async (event: FormEvent) => {
+        event.preventDefault()
+        if (!accessToken) return
+
+        try {
+            openActionDialog('Updating Competition Default Points')
+            const updated = await api.updateAdminCompetitionActivityPointsDefault(accessToken, Number(competitionPointsDefaultInput))
+            applyCompetitionPointsConfig(updated)
+            showActionSuccess('Configuration Updated', 'Global default competition activity points updated.')
+        } catch (error) {
+            showActionError('Could Not Update Configuration', error instanceof Error ? error.message : 'Update failed')
+        }
+    }
+
+    const onSaveCompetitionOverride = async (competitionId: string) => {
+        if (!accessToken) return
+
+        const value = competitionOverrideInputs[competitionId]
+        if (!value?.trim()) return
+
+        try {
+            openActionDialog('Updating Competition Override')
+            const updated = await api.upsertAdminCompetitionActivityPointsOverride(accessToken, competitionId, Number(value))
+            applyCompetitionPointsConfig(updated)
+            showActionSuccess('Override Updated', 'Competition-specific points override saved.')
+        } catch (error) {
+            showActionError('Could Not Update Override', error instanceof Error ? error.message : 'Update failed')
+        }
+    }
+
+    const onClearCompetitionOverride = async (competitionId: string) => {
+        if (!accessToken) return
+
+        try {
+            openActionDialog('Clearing Competition Override')
+            const updated = await api.deleteAdminCompetitionActivityPointsOverride(accessToken, competitionId)
+            applyCompetitionPointsConfig(updated)
+            showActionSuccess('Override Cleared', 'Competition-specific override removed.')
+        } catch (error) {
+            showActionError('Could Not Clear Override', error instanceof Error ? error.message : 'Clear failed')
+        }
+    }
+
     return (
         <section className="stack admin-workspace" style={{ width: 'min(1260px, calc(100% - 24px))', margin: '20px auto' }}>
             <div className="section-head admin-hero">
@@ -600,32 +670,34 @@ export function AdminPointsPage() {
                             </button>
                         </div>
 
+                        <article className={`card selected-participant-card ${selectedParticipant ? 'active' : ''}`}>
+                            <div className="actions-row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                                <p className="tiny muted">Current Participant</p>
+                                <div className="actions-row">
+                                    {participantDetailLoading ? (
+                                        <>
+                                            <div className="admin-spinner" aria-hidden="true" />
+                                            <span className="tiny muted">Refreshing...</span>
+                                        </>
+                                    ) : null}
+                                    <button
+                                        type="button"
+                                        className="outline-button"
+                                        disabled={!selectedParticipantId || participantDetailLoading}
+                                        onClick={() => {
+                                            void refreshSelectedParticipantDetails()
+                                        }}
+                                    >
+                                        Refresh
+                                    </button>
+                                </div>
+                            </div>
+                            {participantDetailError ? <div className="error-banner">{participantDetailError}</div> : null}
+                        </article>
+
                         {activeParticipantWorkflowTab === 'participant-info' ? (
                             <article className={`card selected-participant-card ${selectedParticipant ? 'active' : ''}`}>
-                                <div className="actions-row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <p className="tiny muted">Current Participant</p>
-                                    <div className="actions-row">
-                                        {participantDetailLoading ? (
-                                            <>
-                                                <div className="admin-spinner" aria-hidden="true" />
-                                                <span className="tiny muted">Refreshing...</span>
-                                            </>
-                                        ) : null}
-                                        <button
-                                            type="button"
-                                            className="outline-button"
-                                            disabled={!selectedParticipantId || participantDetailLoading}
-                                            onClick={() => {
-                                                void refreshSelectedParticipantDetails()
-                                            }}
-                                        >
-                                            Refresh
-                                        </button>
-                                    </div>
-                                </div>
-                                {participantDetailError ? (
-                                    <div className="error-banner">{participantDetailError}</div>
-                                ) : participantDetail ? (
+                                {participantDetail ? (
                                     <div className="data-list compact">
                                         <div>
                                             <dt>Name</dt>
@@ -990,6 +1062,7 @@ export function AdminPointsPage() {
                                                                     onClick={() => {
                                                                         setReviewActivityId(item.id)
                                                                         setReviewStatusFilter('PENDING')
+                                                                        scrollToSubmissionsByActivity()
                                                                     }}
                                                                 >
                                                                     Review Submissions
@@ -1004,7 +1077,7 @@ export function AdminPointsPage() {
                                 </table>
                             </article>
 
-                            <article className="card table-wrap admin-flow-card stack">
+                            <article className="card table-wrap admin-flow-card stack" ref={submissionsByActivityRef}>
                                 <h3>Submissions By Activity</h3>
                                 <div className="grid two" style={{ alignItems: 'end' }}>
                                     <select value={reviewActivityId} onChange={(event) => setReviewActivityId(event.target.value)}>
@@ -1102,6 +1175,99 @@ export function AdminPointsPage() {
                                         </tbody>
                                     </table>
                                 )}
+                            </article>
+
+                            <article className="card table-wrap admin-flow-card stack">
+                                <h3>Competition Activity Points Configuration</h3>
+                                <p className="muted tiny">
+                                    These values are consumed by automated jobs that create and update competition participation activities.
+                                </p>
+
+                                <form className="actions-row" onSubmit={onUpdateCompetitionDefaultPoints}>
+                                    <label style={{ display: 'grid', gap: 6 }}>
+                                        Global default points
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            max={1000}
+                                            value={competitionPointsDefaultInput}
+                                            onChange={(event) => setCompetitionPointsDefaultInput(event.target.value)}
+                                            required
+                                        />
+                                    </label>
+                                    <button type="submit">Save Default</button>
+                                </form>
+
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Competition</th>
+                                            <th>Current Override</th>
+                                            <th>Set Override</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {competitionList.map((competition) => {
+                                            const currentOverride =
+                                                competitionPointsConfig?.overrides.find(
+                                                    (item) => item.competitionId === competition.id,
+                                                )?.points ?? null
+
+                                            return (
+                                                <tr key={competition.id}>
+                                                    <td>{competition.name}</td>
+                                                    <td>{currentOverride === null ? '-' : currentOverride}</td>
+                                                    <td>
+                                                        <input
+                                                            type="number"
+                                                            min={0}
+                                                            max={1000}
+                                                            value={competitionOverrideInputs[competition.id] || ''}
+                                                            onChange={(event) =>
+                                                                setCompetitionOverrideInputs((prev) => ({
+                                                                    ...prev,
+                                                                    [competition.id]: event.target.value,
+                                                                }))
+                                                            }
+                                                            placeholder="Use default"
+                                                        />
+                                                    </td>
+                                                    <td>
+                                                        <div className="actions-row">
+                                                            <button
+                                                                type="button"
+                                                                disabled={!competitionOverrideInputs[competition.id]?.trim()}
+                                                                onClick={() => {
+                                                                    void onSaveCompetitionOverride(competition.id)
+                                                                }}
+                                                            >
+                                                                Save Override
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className="outline-button"
+                                                                disabled={currentOverride === null}
+                                                                onClick={() => {
+                                                                    void onClearCompetitionOverride(competition.id)
+                                                                }}
+                                                            >
+                                                                Clear
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        })}
+                                        {!competitionList.length ? (
+                                            <tr>
+                                                <td colSpan={4} className="muted">
+                                                    No competitions found.
+                                                </td>
+                                            </tr>
+                                        ) : null}
+                                    </tbody>
+                                </table>
                             </article>
                         </div>
                     </div>

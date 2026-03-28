@@ -5,6 +5,7 @@ import type {
   AdminLoginResponse,
   AdminParticipantDetail,
   ActivityType,
+  CompetitionActivityPointsConfig,
   ActivityProgressItem,
   AdjustPointsPayload,
   Competition,
@@ -29,7 +30,7 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL?.trim() || 'http://localhost:3000/api/v1'
 
 type RequestOptions = {
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'
+  method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
   body?: unknown
   accessToken?: string | null
 }
@@ -74,10 +75,10 @@ export const api = {
       body: { email, password },
     })
   },
-  signupRequest(email: string) {
+  signupRequest(email: string, fullName: string) {
     return request<SignupRequestResponse>('/auth/signup/request', {
       method: 'POST',
-      body: { email },
+      body: { email, fullName },
     })
   },
   signupVerify(email: string, token: string, password: string, confirmPassword: string) {
@@ -191,6 +192,31 @@ export const api = {
     }
 
     return request<ActivitySubmission[]>(`/points/admin/submissions/by-activity?${query.toString()}`, {
+      accessToken,
+    })
+  },
+  getAdminCompetitionActivityPointsConfig(accessToken: string) {
+    return request<CompetitionActivityPointsConfig>('/points/admin/config/competition-activity-points', {
+      accessToken,
+    })
+  },
+  updateAdminCompetitionActivityPointsDefault(accessToken: string, points: number) {
+    return request<CompetitionActivityPointsConfig>('/points/admin/config/competition-activity-points/default', {
+      method: 'PATCH',
+      accessToken,
+      body: { points },
+    })
+  },
+  upsertAdminCompetitionActivityPointsOverride(accessToken: string, competitionId: string, points: number) {
+    return request<CompetitionActivityPointsConfig>(`/points/admin/config/competition-activity-points/overrides/${competitionId}`, {
+      method: 'PUT',
+      accessToken,
+      body: { points },
+    })
+  },
+  deleteAdminCompetitionActivityPointsOverride(accessToken: string, competitionId: string) {
+    return request<CompetitionActivityPointsConfig>(`/points/admin/config/competition-activity-points/overrides/${competitionId}`, {
+      method: 'DELETE',
       accessToken,
     })
   },

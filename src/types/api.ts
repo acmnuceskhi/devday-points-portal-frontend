@@ -32,6 +32,7 @@ export type LoginResponse = {
 
 export type SignupRequestResponse = {
   message: string
+  hint?: string
   signupLink?: string
   expiresInMinutes?: number
 }
@@ -228,6 +229,18 @@ export type ActivitySubmissionListParams = {
   limit?: number
   offset?: number
   status?: 'PENDING' | 'APPROVED' | 'REJECTED'
+}
+
+export type CompetitionPointsOverride = {
+  competitionId: string
+  competitionName: string
+  points: number | null
+}
+
+export type CompetitionActivityPointsConfig = {
+  key: string
+  globalDefaultPoints: number | null
+  overrides: CompetitionPointsOverride[]
 }
 
 export type MarkCompletionPayload = {

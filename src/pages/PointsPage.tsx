@@ -19,6 +19,7 @@ export function PointsPage() {
     const [errorMessage, setErrorMessage] = useState('')
     const [submissionLinks, setSubmissionLinks] = useState<Record<string, string>>({})
     const [submissionTexts, setSubmissionTexts] = useState<Record<string, string>>({})
+    const [activitySearch, setActivitySearch] = useState('')
     const [submittingActivityId, setSubmittingActivityId] = useState<string | null>(null)
     const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null)
     const [submissionDialog, setSubmissionDialog] = useState<SubmissionDialogState>({
@@ -64,6 +65,20 @@ export function PointsPage() {
         () => activities.find((item) => item.id === selectedActivityId) || null,
         [activities, selectedActivityId],
     )
+
+    const filteredActivities = useMemo(() => {
+        const needle = activitySearch.trim().toLowerCase()
+        if (!needle) return activities
+
+        return activities.filter((item) => {
+            return (
+                item.name.toLowerCase().includes(needle) ||
+                item.code.toLowerCase().includes(needle) ||
+                item.activityTypeCode.toLowerCase().includes(needle) ||
+                (item.description || '').toLowerCase().includes(needle)
+            )
+        })
+    }, [activities, activitySearch])
 
     const onSubmitActivity = async (event: FormEvent, item: ActivityProgressItem) => {
         event.preventDefault()
@@ -162,8 +177,13 @@ export function PointsPage() {
 
             <section className="stack">
                 <h3>Your Activities</h3>
+                <input
+                    value={activitySearch}
+                    onChange={(event) => setActivitySearch(event.target.value)}
+                    placeholder="Search activities by name, code, type, or description"
+                />
                 <div className="grid">
-                    {activities.map((item) => {
+                    {filteredActivities.map((item) => {
                         const statusLabel = item.isCompleted
                             ? 'Completed'
                             : item.submissionStatus
@@ -186,6 +206,11 @@ export function PointsPage() {
                             </article>
                         )
                     })}
+                    {!filteredActivities.length ? (
+                        <article className="card">
+                            <p className="muted">No activities match your search.</p>
+                        </article>
+                    ) : null}
                 </div>
             </section>
 

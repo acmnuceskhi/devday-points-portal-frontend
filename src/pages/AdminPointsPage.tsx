@@ -99,6 +99,7 @@ export function AdminPointsPage() {
     const [editActivityName, setEditActivityName] = useState('')
     const [editActivityPoints, setEditActivityPoints] = useState('')
     const [editActivityDescription, setEditActivityDescription] = useState('')
+    const [activitySearch, setActivitySearch] = useState('')
     const [reviewActivityId, setReviewActivityId] = useState('')
     const [reviewStatusFilter, setReviewStatusFilter] = useState<'PENDING' | 'APPROVED' | 'REJECTED' | ''>('PENDING')
     const [activitySubmissions, setActivitySubmissions] = useState<ActivitySubmission[]>([])
@@ -342,6 +343,20 @@ export function AdminPointsPage() {
         () => activities.map((item) => ({ value: item.id, label: `${item.code} - ${item.name} (${item.activityTypeCode})` })),
         [activities],
     )
+
+    const filteredActivities = useMemo(() => {
+        const needle = activitySearch.trim().toLowerCase()
+        if (!needle) return activities
+
+        return activities.filter((item) => {
+            return (
+                item.code.toLowerCase().includes(needle) ||
+                item.name.toLowerCase().includes(needle) ||
+                item.activityTypeCode.toLowerCase().includes(needle) ||
+                (item.description || '').toLowerCase().includes(needle)
+            )
+        })
+    }, [activities, activitySearch])
 
     const selectedNewActivityKind = useMemo(
         () => activityKinds.find((kind) => kind.id === newActivityTypeId) || null,
@@ -1120,6 +1135,11 @@ export function AdminPointsPage() {
 
                                     <article className="card table-wrap table-scroll-y admin-flow-card">
                                         <h3>Activities</h3>
+                                        <input
+                                            value={activitySearch}
+                                            onChange={(event) => setActivitySearch(event.target.value)}
+                                            placeholder="Search activities by code, name, type, or description"
+                                        />
                                         <table>
                                             <thead>
                                                 <tr>
@@ -1133,7 +1153,7 @@ export function AdminPointsPage() {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {activities.map((item) => (
+                                                {filteredActivities.map((item) => (
                                                     <tr key={item.id}>
                                                         <td>{item.code}</td>
                                                         <td>
@@ -1206,6 +1226,13 @@ export function AdminPointsPage() {
                                                         </td>
                                                     </tr>
                                                 ))}
+                                                {!filteredActivities.length ? (
+                                                    <tr>
+                                                        <td colSpan={7} className="muted">
+                                                            No activities match this search.
+                                                        </td>
+                                                    </tr>
+                                                ) : null}
                                             </tbody>
                                         </table>
                                     </article>

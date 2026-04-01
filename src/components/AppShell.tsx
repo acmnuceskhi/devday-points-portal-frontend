@@ -2,9 +2,11 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 const navItems = [
-    { label: 'Dashboard', to: '/' },
-    { label: 'Your Points', to: '/points' },
-    { label: 'Rankings', to: '/rankings' },
+    { label: 'Console', to: '/' },
+    { label: 'My Missions', to: '/my-competitions' },
+    { label: 'Mission Grid', to: '/competitions' },
+    { label: 'Signal Score', to: '/points' },
+    { label: 'Leaderboard', to: '/rankings' },
 ]
 
 export function AppShell() {
@@ -27,13 +29,13 @@ export function AppShell() {
                         style={{ width: 52, height: 72, objectFit: 'contain' }}
                     />
                     <div className="portal-title-block">
-                        <p className="eyebrow">DEVDAY '26</p>
-                        <h1 className="portal-title-main">Participant Portal</h1>
-                        <p className="muted tiny">Signed in as {participant?.fullName || 'Participant'}</p>
+                        <p className="eyebrow">DEVDAY '26 | VR SIMULATION</p>
+                        <h1 className="portal-title-main">Operator Console</h1>
+                        <p className="muted tiny">Signed in as {participant?.fullName || 'Operator'}</p>
                     </div>
                 </div>
                 <button className="outline-button" onClick={onLogout}>
-                    Log Out
+                    End Session
                 </button>
             </header>
 

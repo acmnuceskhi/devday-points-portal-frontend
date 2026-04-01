@@ -9,7 +9,7 @@ export async function exportElementAsImage(elementId: string, fileNamePrefix: st
     const dataUrl = await toPng(element, {
         cacheBust: true,
         pixelRatio: 2,
-        backgroundColor: '#0b1220',
+        backgroundColor: '#130808',
         skipFonts: true,
     })
 

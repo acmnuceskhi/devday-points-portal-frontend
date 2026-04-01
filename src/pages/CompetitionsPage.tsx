@@ -29,24 +29,27 @@ export function CompetitionsPage() {
   return (
     <section className="stack">
       <div className="section-head">
-        <h2>Competition Explorer</h2>
+        <div>
+          <h2>Mission Grid</h2>
+          <p className="muted tiny">Browse available mission nodes in the simulation map.</p>
+        </div>
         <label className="toggle-row">
           <input
             type="checkbox"
             checked={activeOnly}
             onChange={(event) => setActiveOnly(event.target.checked)}
           />
-          Active only
+          Active nodes only
         </label>
       </div>
 
-      {loading ? <div className="center-state">Loading competitions...</div> : null}
+      {loading ? <div className="center-state">Syncing mission grid...</div> : null}
       {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
 
       {!loading && !errorMessage ? (
         <div className="grid">
           {items.map((item) => (
-            <article className="card" key={item.id}>
+            <article className="card sim-panel" key={item.id}>
               <h3>{item.name}</h3>
               <p className="muted">{item.description || 'No description available.'}</p>
               <p className="muted">Date: {new Date(item.compDay).toLocaleDateString()}</p>
@@ -54,10 +57,10 @@ export function CompetitionsPage() {
                 Team Size: {item.minTeamSize || '-'} to {item.maxTeamSize || '-'}
               </p>
               <p className="status">
-                Seats left: <strong>{item.availableSeats}</strong>
+                Open slots: <strong>{item.availableSeats}</strong>
               </p>
               <Link className="link-button" to={`/competitions/${item.id}`}>
-                Open Details
+                Inspect Mission
               </Link>
             </article>
           ))}

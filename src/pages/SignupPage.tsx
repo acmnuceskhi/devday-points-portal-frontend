@@ -45,14 +45,13 @@ export function SignupPage() {
   return (
     <div className="auth-page">
       <section className="auth-card">
-        <p className="eyebrow">Devday 2026</p>
-        <h1>Create Participant Access</h1>
-        <p className="muted">
-          Use this if you want to participate in activities and you were not previously registered through competition signup.
-        </p>
-        <p className="muted tiny">
-          If you already registered for any competition, use that same email here so all your points and activity scores stay in one place.
-        </p>
+        <div className="auth-headline">
+          <p className="eyebrow">Devday 2026 | Access Provisioning</p>
+          <h1 className="auth-title">Initialize Operator Access</h1>
+          <p className="auth-subtitle">
+            Request a secure OTP link to create your participant console session.
+          </p>
+        </div>
 
         <form className="auth-form" onSubmit={onSubmit}>
           <label>
@@ -80,7 +79,7 @@ export function SignupPage() {
           </label>
 
           <button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Requesting OTP...' : 'Request OTP Link'}
+            {isSubmitting ? 'Requesting Secure Link...' : 'Request OTP Access Link'}
           </button>
         </form>
 
@@ -88,17 +87,19 @@ export function SignupPage() {
         {hint ? <p className="muted tiny">{hint}</p> : null}
         {registeredLoginPath ? (
           <p className="tiny">
-            Continue to <Link to={registeredLoginPath}>participant login</Link> using this email.
+            Existing operator detected. Continue to <Link to={registeredLoginPath}>console login</Link> with this email.
           </p>
         ) : null}
         {signupLink ? (
           <p className="tiny">
-            Dev link: <a href={signupLink}>{signupLink}</a>
+            Dev token link: <a href={signupLink}>{signupLink}</a>
           </p>
         ) : null}
 
+        <p className="auth-status">Use your competition-registered email so mission progress and points remain unified.</p>
+
         <p className="muted tiny">
-          Already have access? <Link to="/login">Sign in</Link>
+          Access already initialized? <Link to="/login">Enter console</Link>
         </p>
       </section>
     </div>

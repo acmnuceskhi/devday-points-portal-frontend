@@ -36,9 +36,11 @@ export function SignupVerifyPage() {
   return (
     <div className="auth-page">
       <section className="auth-card">
-        <p className="eyebrow">Devday 2026</p>
-        <h1>Verify OTP Link</h1>
-        <p className="muted">Paste the OTP token you received and set your password.</p>
+        <div className="auth-headline">
+          <p className="eyebrow">Devday 2026 | OTP Verification</p>
+          <h1 className="auth-title">Complete Operator Handshake</h1>
+          <p className="auth-subtitle">Validate your OTP token and lock in your console credentials.</p>
+        </div>
 
         <form className="auth-form" onSubmit={onSubmit}>
           <label>
@@ -91,14 +93,14 @@ export function SignupVerifyPage() {
           </label>
 
           <button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Verifying...' : 'Verify And Continue'}
+            {isSubmitting ? 'Verifying Handshake...' : 'Verify and Enter Console'}
           </button>
         </form>
 
         {message ? <p className="status">{message}</p> : null}
 
         <p className="muted tiny">
-          Need a new OTP? <Link to="/signup">Request again</Link>
+          OTP expired? <Link to="/signup">Request new access link</Link>
         </p>
       </section>
     </div>

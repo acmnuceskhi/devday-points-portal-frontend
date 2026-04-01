@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { api } from '../lib/api'
+import { useAuth } from '../context/AuthContext'
 import type { PointsLeaderboardItem } from '../types/api'
 
 export function RankingsPage() {
+    const { participant } = useAuth()
     const [items, setItems] = useState<PointsLeaderboardItem[]>([])
     const [loading, setLoading] = useState(true)
     const [errorMessage, setErrorMessage] = useState('')
@@ -23,6 +25,10 @@ export function RankingsPage() {
         void load()
     }, [])
 
+    const yourRank = participant
+        ? items.findIndex((item) => item.participantId === participant.id) + 1
+        : 0
+
     return (
         <section className="stack">
             <h2>Global Simulation Leaderboard</h2>
@@ -31,6 +37,13 @@ export function RankingsPage() {
             {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
 
             {!loading && !errorMessage ? (
+                <>
+                {yourRank ? (
+                    <article className="card sim-panel">
+                        <h3>Your Signal Position</h3>
+                        <p className="muted">You are currently ranked <strong>#{yourRank}</strong> in the global simulation leaderboard.</p>
+                    </article>
+                ) : null}
                 <div className="card table-wrap table-scroll-y sim-panel">
                     <table>
                         <thead>
@@ -53,6 +66,7 @@ export function RankingsPage() {
                         </tbody>
                     </table>
                 </div>
+                </>
             ) : null}
         </section>
     )

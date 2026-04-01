@@ -7,6 +7,9 @@ import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { AdminPointsPage } from './pages/AdminPointsPage'
+import { CompetitionsPage } from './pages/CompetitionsPage'
+import { CompetitionDetailPage } from './pages/CompetitionDetailPage'
+import { MyCompetitionsPage } from './pages/MyCompetitionsPage'
 import { PointsPage } from './pages/PointsPage'
 import { RankingsPage } from './pages/RankingsPage'
 import { SignupPage } from './pages/SignupPage'
@@ -29,6 +32,9 @@ function App() {
           }
         >
           <Route index element={<DashboardPage />} />
+          <Route path="my-competitions" element={<MyCompetitionsPage />} />
+          <Route path="competitions" element={<CompetitionsPage />} />
+          <Route path="competitions/:competitionId" element={<CompetitionDetailPage />} />
           <Route path="teams/:teamId" element={<TeamDetailPage />} />
           <Route path="rankings" element={<RankingsPage />} />
           <Route path="points" element={<PointsPage />} />

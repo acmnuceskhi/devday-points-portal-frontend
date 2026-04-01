@@ -46,9 +46,11 @@ export function LoginPage() {
                 <div className="actions-row" style={{ justifyContent: 'center' }}>
                     <img src="/devday-logo.png" alt="DevDay logo" style={{ width: 34, height: 50, objectFit: 'contain' }} />
                 </div>
-                <p className="eyebrow">Devday 2026</p>
-                <h1>Participant Login</h1>
-                <p className="muted">Use your participant email and existing password.</p>
+                <div className="auth-headline">
+                    <p className="eyebrow">Devday 2026 | Simulation Access</p>
+                    <h1 className="auth-title">Operator Authentication</h1>
+                    <p className="auth-subtitle">Authenticate with your participant credentials to sync your mission console.</p>
+                </div>
 
                 <form className="auth-form" onSubmit={onSubmit}>
                     <label>
@@ -75,22 +77,19 @@ export function LoginPage() {
                         />
                     </label>
 
-                    {errorMessage ? <p className="error-banner">{errorMessage}</p> : null}
+                    {errorMessage ? <p className="error-banner" role="alert">{errorMessage}</p> : null}
 
                     <button type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? 'Signing in...' : 'Sign In'}
+                        {isSubmitting ? 'Establishing Session...' : 'Enter Console'}
                     </button>
                 </form>
 
-                <p className="muted tiny">
-                    API base URL can be overridden via <strong>VITE_API_BASE_URL</strong>.
-                </p>
-                <p className="muted tiny">
-                    Need rankings without login? Go to <Link to="/rankings">Rankings</Link> after sign-in.
+                <p className="auth-status">
+                    Mission note: if you already joined a competition, use the same email to preserve your signal score.
                 </p>
 
                 <p className="muted tiny">
-                    New here and want to participate in activities? <Link to="/signup">Create access</Link>
+                    New operator? <Link to="/signup">Request access link</Link>
                 </p>
             </section>
         </div>

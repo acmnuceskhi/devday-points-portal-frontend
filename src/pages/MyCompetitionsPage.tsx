@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../lib/api'
+import { exportElementAsImage } from '../lib/exportAsImage'
 import type { ParticipantCompetition } from '../types/api'
 
 export function MyCompetitionsPage() {
@@ -9,6 +10,8 @@ export function MyCompetitionsPage() {
   const [items, setItems] = useState<ParticipantCompetition[]>([])
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
+  const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -31,6 +34,18 @@ export function MyCompetitionsPage() {
     void load()
   }, [accessToken])
 
+  const onExport = async () => {
+    try {
+      setExportError('')
+      setExporting(true)
+      await exportElementAsImage('my-competitions-export', 'simulation-missions')
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : 'Could not export competitions snapshot.')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   if (loading) {
     return <div className="center-state">Loading your competitions...</div>
   }
@@ -45,23 +60,38 @@ export function MyCompetitionsPage() {
 
   return (
     <section className="stack">
-      <h2>My Competitions</h2>
-      <div className="grid">
+      <div className="section-head">
+        <div>
+          <h2>Mission Queue</h2>
+          <p className="muted tiny">Live schedule from the simulation runtime.</p>
+        </div>
+        <button type="button" onClick={() => void onExport()} disabled={exporting}>
+          {exporting ? 'Exporting...' : 'Download Mission Snapshot'}
+        </button>
+      </div>
+      {exportError ? <div className="error-banner">{exportError}</div> : null}
+
+      <div className="grid" id="my-competitions-export">
         {items.map((item) => (
-          <article key={`${item.teamId}-${item.competitionId}`} className="card">
+          <article key={`${item.teamId}-${item.competitionId}`} className="card sim-panel">
             <h3>{item.competitionName}</h3>
             <p className="muted">
-              Team: <strong>{item.teamName}</strong> {item.isLeader ? '(Leader)' : ''}
+              Squad: <strong>{item.teamName}</strong> {item.isLeader ? '(Leader Node)' : ''}
             </p>
             <p className="muted">
               Date: {new Date(item.compDay).toLocaleDateString()} | Time: {item.startTime || '-'} -{' '}
               {item.endTime || '-'}
             </p>
-            <p className="muted">Venue: {item.venueName || 'TBA'}</p>
-            <p className="status">Payment: {item.paymentStatus}</p>
+            <p className="muted">
+              Venue:{' '}
+              {item.venues?.length
+                ? item.venues.map((venue) => venue.name).join(', ')
+                : item.venueName || 'TBA'}
+            </p>
+            <p className="status">Verification State: {item.paymentStatus}</p>
             <div className="actions-row">
               <Link className="link-button" to={`/teams/${item.teamId}`}>
-                View Team
+                Open Squad Profile
               </Link>
             </div>
           </article>

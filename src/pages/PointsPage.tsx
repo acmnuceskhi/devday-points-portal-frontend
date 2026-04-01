@@ -155,11 +155,11 @@ export function PointsPage() {
 
     return (
         <section className="stack">
-            <h2>Your Points</h2>
+            <h2>Simulation Score Grid</h2>
 
             <div className="grid two">
-                <article className="card">
-                    <h3>Total Points</h3>
+                <article className="card sim-panel">
+                    <h3>Total Signal Score</h3>
                     <p style={{ fontSize: 34, fontWeight: 700 }}>{summary?.totalPoints ?? 0}</p>
                     <p className="muted tiny">
                         Last updated:{' '}
@@ -167,20 +167,20 @@ export function PointsPage() {
                     </p>
                 </article>
 
-                <article className="card">
-                    <h3>Activity Progress</h3>
+                <article className="card sim-panel">
+                    <h3>Mission Progress</h3>
                     <p className="muted">
-                        Completed {completedCount} of {activities.length} activities
+                        Completed {completedCount} of {activities.length} operations
                     </p>
                 </article>
             </div>
 
             <section className="stack">
-                <h3>Your Activities</h3>
+                <h3>Operations Feed</h3>
                 <input
                     value={activitySearch}
                     onChange={(event) => setActivitySearch(event.target.value)}
-                    placeholder="Search activities by name, code, type, or description"
+                    placeholder="Search operations by name, code, type, or description"
                 />
                 <div className="grid">
                     {filteredActivities.map((item) => {

@@ -48,11 +48,11 @@ export function CompetitionDetailPage() {
       <div className="section-head">
         <h2>{item.name}</h2>
         <Link className="link-button" to="/competitions">
-          Back
+          Return to Mission Grid
         </Link>
       </div>
 
-      <article className="card">
+      <article className="card sim-panel">
         <p>{item.description || 'No description provided.'}</p>
         <dl className="data-list compact">
           <div>
@@ -76,7 +76,7 @@ export function CompetitionDetailPage() {
         </dl>
       </article>
 
-      <h3>Venues</h3>
+      <h3>Runtime Venues</h3>
       <div className="grid">
         {item.venues.length ? (
           item.venues.map((venue) => (

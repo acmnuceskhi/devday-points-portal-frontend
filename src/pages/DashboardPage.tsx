@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { exportElementAsImage } from '../lib/exportAsImage'
 import { api } from '../lib/api'
 import type { ParticipantCompetition } from '../types/api'
 
@@ -9,6 +10,8 @@ export function DashboardPage() {
   const [competitions, setCompetitions] = useState<ParticipantCompetition[]>([])
   const [loadingCompetitions, setLoadingCompetitions] = useState(true)
   const [competitionsError, setCompetitionsError] = useState('')
+  const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState('')
 
   useEffect(() => {
     async function loadCompetitions() {
@@ -31,12 +34,35 @@ export function DashboardPage() {
     void loadCompetitions()
   }, [accessToken])
 
+  const onExport = async () => {
+    try {
+      setExportError('')
+      setExporting(true)
+      await exportElementAsImage('dashboard-sim-export', 'simulation-dashboard')
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : 'Could not export dashboard image.')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   return (
     <section className="stack">
-      <h2>Dashboard</h2>
+      <div className="section-head">
+        <div>
+          <h2>Simulation Identity Console</h2>
+          <p className="muted tiny">Node sync complete. Operator profile and mission queue are live.</p>
+        </div>
+        <button type="button" onClick={() => void onExport()} disabled={exporting}>
+          {exporting ? 'Exporting...' : 'Download Console Snapshot'}
+        </button>
+      </div>
+      {exportError ? <div className="error-banner">{exportError}</div> : null}
+
+      <div id="dashboard-sim-export" className="stack sim-export-wrap">
       <div className="grid two">
-        <article className="card">
-          <h3>Identity</h3>
+        <article className="card sim-panel">
+          <h3>Operator Identity</h3>
           <dl className="data-list">
             <div>
               <dt>Name</dt>
@@ -54,11 +80,15 @@ export function DashboardPage() {
               <dt>Phone</dt>
               <dd>{participant?.phone || '-'}</dd>
             </div>
+            <div>
+              <dt>Minigame Code</dt>
+              <dd>{participant?.minigameCode || 'Awaiting assignment'}</dd>
+            </div>
           </dl>
         </article>
 
-        <article className="card">
-          <h3>Academic Info</h3>
+        <article className="card sim-panel">
+          <h3>Profile Telemetry</h3>
           <dl className="data-list">
             <div>
               <dt>Institution</dt>
@@ -80,8 +110,8 @@ export function DashboardPage() {
         </article>
       </div>
 
-      <article className="card stack">
-        <h3>Registered Competitions</h3>
+      <article className="card stack sim-panel">
+        <h3>Mission Queue</h3>
         {loadingCompetitions ? <p className="muted">Loading your competitions...</p> : null}
         {competitionsError ? <div className="error-banner">{competitionsError}</div> : null}
         {!loadingCompetitions && !competitionsError ? (
@@ -111,7 +141,11 @@ export function DashboardPage() {
                   </div>
                   <div>
                     <dt>Venue</dt>
-                    <dd>{item.venueName || 'TBA'}</dd>
+                      <dd>
+                        {item.venues?.length
+                          ? item.venues.map((venue) => venue.name).join(', ')
+                          : item.venueName || 'TBA'}
+                      </dd>
                   </div>
                 </dl>
 
@@ -126,6 +160,7 @@ export function DashboardPage() {
           </div>
         ) : null}
       </article>
+      </div>
     </section>
   )
 }

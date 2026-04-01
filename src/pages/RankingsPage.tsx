@@ -25,13 +25,13 @@ export function RankingsPage() {
 
     return (
         <section className="stack">
-            <h2>Rankings</h2>
+            <h2>Global Simulation Leaderboard</h2>
 
-            {loading ? <div className="center-state">Loading rankings...</div> : null}
+            {loading ? <div className="center-state">Syncing leaderboard feed...</div> : null}
             {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
 
             {!loading && !errorMessage ? (
-                <div className="card table-wrap table-scroll-y">
+                <div className="card table-wrap table-scroll-y sim-panel">
                     <table>
                         <thead>
                             <tr>

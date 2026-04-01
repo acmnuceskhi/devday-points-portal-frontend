@@ -16,6 +16,7 @@ export type UserSummary = {
 export type ParticipantProfile = {
   id: string
   userId: string
+  minigameCode: string | null
   cnic: string | null
   email: string | null
   fullName: string
@@ -74,6 +75,10 @@ export type ParticipantCompetition = {
   endTime: string
   venueId: string | null
   venueName: string | null
+  venues?: Array<{
+    id: string
+    name: string
+  }>
 }
 
 export type Competition = {

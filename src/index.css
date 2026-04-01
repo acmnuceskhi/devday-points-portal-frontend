@@ -359,6 +359,20 @@
         @apply text-[10px] uppercase tracking-[0.1em] text-[#cdcdcd];
     }
 
+    .sim-panel {
+        background:
+            linear-gradient(145deg, rgba(16, 26, 48, 0.72), rgba(12, 18, 34, 0.82)),
+            radial-gradient(circle at 15% 15%, rgba(0, 255, 244, 0.08), transparent 45%);
+        border-color: rgba(88, 134, 222, 0.45);
+        box-shadow: inset 0 0 0 1px rgba(80, 136, 255, 0.16), 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .sim-export-wrap {
+        @apply rounded-2xl border border-[#27406d] p-3;
+        background:
+            linear-gradient(180deg, rgba(7, 12, 24, 0.85), rgba(10, 15, 30, 0.9));
+    }
+
     .competition-meta-list dd {
         @apply m-0 text-sm font-bold text-white;
     }

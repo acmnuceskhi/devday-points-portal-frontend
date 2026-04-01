@@ -438,6 +438,24 @@ export function AdminPointsPage() {
         }
     }
 
+    const onToggleActivityStatus = async (activity: ActivityType) => {
+        if (!accessToken) return
+
+        const nextState = !activity.isActive
+        const actionLabel = nextState ? 'Activate' : 'Deactivate'
+        const confirmed = window.confirm(`${actionLabel} activity "${activity.name}"?`)
+        if (!confirmed) return
+
+        try {
+            openActionDialog(`${actionLabel} Activity`)
+            await api.toggleAdminActivityStatus(accessToken, activity.id, nextState)
+            await refreshGlobalData()
+            showActionSuccess('Activity State Updated', `Activity is now ${nextState ? 'active' : 'inactive'}.`)
+        } catch (error) {
+            showActionError('Could Not Update Activity State', error instanceof Error ? error.message : 'Update failed')
+        }
+    }
+
     const onMarkCompletion = async (event: FormEvent) => {
         event.preventDefault()
         if (!accessToken || !selectedParticipantId) return
@@ -1208,6 +1226,15 @@ export function AdminPointsPage() {
                                                                     <>
                                                                         <button type="button" onClick={() => onStartEditActivity(item)}>
                                                                             Edit
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            className="outline-button"
+                                                                            onClick={() => {
+                                                                                void onToggleActivityStatus(item)
+                                                                            }}
+                                                                        >
+                                                                            {item.isActive ? 'Deactivate' : 'Activate'}
                                                                         </button>
                                                                         <button
                                                                             type="button"

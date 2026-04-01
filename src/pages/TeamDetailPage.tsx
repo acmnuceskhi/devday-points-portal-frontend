@@ -51,19 +51,19 @@ export function TeamDetailPage() {
         <h2>{item.name}</h2>
         {item.competitionId ? (
           <Link className="link-button" to={`/competitions/${item.competitionId}`}>
-            View Competition
+            Open Mission
           </Link>
         ) : null}
       </div>
 
-      <article className="card">
-        <p className="muted">Competition: {item.competitionName || '-'}</p>
-        <p className="muted">Payment Status: {item.paymentStatus}</p>
+      <article className="card sim-panel">
+        <p className="muted">Mission: {item.competitionName || '-'}</p>
+        <p className="muted">Verification State: {item.paymentStatus}</p>
         <p className="muted">Reference ID: {item.referenceId || '-'}</p>
         <p className="muted">Payment Method: {item.paymentMethod || '-'}</p>
       </article>
 
-      <h3>Members</h3>
+      <h3>Squad Members</h3>
       <div className="grid">
         {item.members.map((member) => (
           <article className="card" key={member.id}>

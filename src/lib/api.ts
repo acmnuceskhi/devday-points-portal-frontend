@@ -163,6 +163,13 @@ export const api = {
       body: payload,
     })
   },
+  toggleAdminActivityStatus(accessToken: string, activityId: string, isActive: boolean) {
+    return request<ActivityType>(`/points/admin/activities/${activityId}/status`, {
+      method: 'PATCH',
+      accessToken,
+      body: { isActive },
+    })
+  },
   markAdminCompletion(accessToken: string, payload: MarkCompletionPayload) {
     return request('/points/admin/completions', {
       method: 'POST',

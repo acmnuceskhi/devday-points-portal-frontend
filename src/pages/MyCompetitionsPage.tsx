@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../lib/api'
-import { exportElementAsImage } from '../lib/exportAsImage'
-import type { ParticipantCompetition } from '../types/api'
+import { formatCompetitionSchedule } from '../lib/formatCompetitionSchedule'
+import type { ParticipantCompetition, TeamDetail } from '../types/api'
+import { TeamDetailModal } from '../components/TeamDetailModal'
+import { TechLoader } from '../components/TechLoader'
 
 export function MyCompetitionsPage() {
   const { accessToken } = useAuth()
   const [items, setItems] = useState<ParticipantCompetition[]>([])
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
-  const [exporting, setExporting] = useState(false)
-  const [exportError, setExportError] = useState('')
+  const [selectedTeam, setSelectedTeam] = useState<TeamDetail | null>(null)
+  const [selectedTeamLoading, setSelectedTeamLoading] = useState(false)
+  const [selectedTeamError, setSelectedTeamError] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -34,20 +36,31 @@ export function MyCompetitionsPage() {
     void load()
   }, [accessToken])
 
-  const onExport = async () => {
+  const onOpenTeam = async (teamId: string) => {
+    if (!accessToken) return
+
+    setSelectedTeam(null)
+    setSelectedTeamError('')
+    setSelectedTeamLoading(true)
+
     try {
-      setExportError('')
-      setExporting(true)
-      await exportElementAsImage('my-competitions-export', 'simulation-missions')
+      const data = await api.getTeamDetail(teamId, accessToken)
+      setSelectedTeam(data)
     } catch (error) {
-      setExportError(error instanceof Error ? error.message : 'Could not export competitions snapshot.')
+      setSelectedTeamError(error instanceof Error ? error.message : 'Could not load team details')
     } finally {
-      setExporting(false)
+      setSelectedTeamLoading(false)
     }
   }
 
+  const closeTeamModal = () => {
+    setSelectedTeam(null)
+    setSelectedTeamError('')
+    setSelectedTeamLoading(false)
+  }
+
   if (loading) {
-    return <div className="center-state">Loading your competitions...</div>
+    return <TechLoader label="Loading main missions..." />
   }
 
   if (errorMessage) {
@@ -59,44 +72,58 @@ export function MyCompetitionsPage() {
   }
 
   return (
-    <section className="stack">
-      <div className="section-head">
-        <div>
-          <h2>Mission Queue</h2>
+    <section className="dashboard-shell stack">
+      <header className="section-head mission-queue-head">
+        <div className="panel-header">
+          <h2 className="page-heading">Main Missions</h2>
           <p className="muted tiny">Live schedule from the simulation runtime.</p>
         </div>
-        <button type="button" onClick={() => void onExport()} disabled={exporting}>
-          {exporting ? 'Exporting...' : 'Download Mission Snapshot'}
-        </button>
-      </div>
-      {exportError ? <div className="error-banner">{exportError}</div> : null}
+        <div className="actions-row">
+          <a className="link-button" href="https://devday26.com/modules" target="_blank" rel="noreferrer">
+            Open Competition Modules <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </header>
 
-      <div className="grid" id="my-competitions-export">
+      <div className="dashboard-export-frame stack" id="my-competitions-export">
+        <section className="dashboard-panel">
+          <div className="stream-list">
         {items.map((item) => (
-          <article key={`${item.teamId}-${item.competitionId}`} className="card sim-panel">
-            <h3>{item.competitionName}</h3>
-            <p className="muted">
-              Squad: <strong>{item.teamName}</strong> {item.isLeader ? '(Leader Node)' : ''}
+          <article key={`${item.teamId}-${item.competitionId}`} className="stream-row">
+            <div>
+              <p className="stream-title">{item.competitionName}</p>
+              <p className="stream-subline">
+                {formatCompetitionSchedule(item)}
+              </p>
+            </div>
+            <p className="mission-team">
+              {item.teamName} {item.isLeader ? '(Leader)' : ''}
             </p>
-            <p className="muted">
-              Date: {new Date(item.compDay).toLocaleDateString()} | Time: {item.startTime || '-'} -{' '}
-              {item.endTime || '-'}
-            </p>
-            <p className="muted">
-              Venue:{' '}
+            <p className="mission-venue">
               {item.venues?.length
                 ? item.venues.map((venue) => venue.name).join(', ')
                 : item.venueName || 'TBA'}
             </p>
-            <p className="status">Verification State: {item.paymentStatus}</p>
-            <div className="actions-row">
-              <Link className="link-button" to={`/teams/${item.teamId}`}>
-                Open Squad Profile
-              </Link>
-            </div>
+            <span className={`competition-status-pill ${item.paymentStatus === 'Paid' ? 'is-verified' : ''}`}>
+              {item.paymentStatus}
+            </span>
+            <button type="button" className="outline-button team-details-button" onClick={() => void onOpenTeam(item.teamId)}>
+              Team Details
+            </button>
           </article>
         ))}
+          </div>
+        </section>
       </div>
+
+      {(selectedTeamLoading || selectedTeam || selectedTeamError) ? (
+        <TeamDetailModal
+          item={selectedTeam}
+          loading={selectedTeamLoading}
+          errorMessage={selectedTeamError}
+          onClose={closeTeamModal}
+        />
+      ) : null}
     </section>
   )
 }

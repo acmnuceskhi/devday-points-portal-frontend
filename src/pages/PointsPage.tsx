@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../lib/api'
 import type { ActivityProgressItem, PointsSummary } from '../types/api'
+import { TechLoader } from '../components/TechLoader'
 
 type SubmissionDialogState = {
     isOpen: boolean
@@ -20,6 +21,8 @@ export function PointsPage() {
     const [submissionLinks, setSubmissionLinks] = useState<Record<string, string>>({})
     const [submissionTexts, setSubmissionTexts] = useState<Record<string, string>>({})
     const [activitySearch, setActivitySearch] = useState('')
+    const [activeObjectiveTab, setActiveObjectiveTab] = useState<'main' | 'side'>('main')
+    const [showCompletedMainOnly, setShowCompletedMainOnly] = useState(true)
     const [submittingActivityId, setSubmittingActivityId] = useState<string | null>(null)
     const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null)
     const [submissionDialog, setSubmissionDialog] = useState<SubmissionDialogState>({
@@ -56,8 +59,8 @@ export function PointsPage() {
         void load()
     }, [accessToken])
 
-    const completedCount = useMemo(
-        () => activities.filter((item) => item.isCompleted).length,
+    const sideMissionCompletedCount = useMemo(
+        () => activities.filter((item) => !item.code.endsWith('_PARTICIPATION') && item.isCompleted).length,
         [activities],
     )
 
@@ -79,6 +82,21 @@ export function PointsPage() {
             )
         })
     }, [activities, activitySearch])
+
+    const mainObjectives = useMemo(
+        () => filteredActivities.filter((item) => item.code.endsWith('_PARTICIPATION')),
+        [filteredActivities],
+    )
+
+    const sideObjectives = useMemo(
+        () => filteredActivities.filter((item) => !item.code.endsWith('_PARTICIPATION')),
+        [filteredActivities],
+    )
+
+    const displayedMainObjectives = useMemo(
+        () => (showCompletedMainOnly ? mainObjectives.filter((item) => item.isCompleted) : mainObjectives),
+        [mainObjectives, showCompletedMainOnly],
+    )
 
     const onSubmitActivity = async (event: FormEvent, item: ActivityProgressItem) => {
         event.preventDefault()
@@ -146,7 +164,7 @@ export function PointsPage() {
     }
 
     if (loading) {
-        return <div className="center-state">Loading points...</div>
+        return <TechLoader label="Loading signal score..." />
     }
 
     if (errorMessage) {
@@ -154,62 +172,151 @@ export function PointsPage() {
     }
 
     return (
-        <section className="stack">
-            <h2>Simulation Score Grid</h2>
+        <section className="dashboard-shell stack">
+            <header className="panel-header">
+                <h2 className="page-heading">Simulation Score Grid</h2>
+                <p className="muted tiny">Track your points and objective progress across the runtime.</p>
+            </header>
 
-            <div className="grid two">
-                <article className="card sim-panel">
-                    <h3>Total Signal Score</h3>
-                    <p style={{ fontSize: 34, fontWeight: 700 }}>{summary?.totalPoints ?? 0}</p>
-                    <p className="muted tiny">
-                        Last updated:{' '}
-                        {summary?.updatedAt ? new Date(summary.updatedAt).toLocaleString() : 'No points yet'}
-                    </p>
+            <section className="dashboard-metrics-strip" aria-label="Points metrics">
+                <article className="metric-block">
+                    <p>Total Signal Score</p>
+                    <strong>{summary?.totalPoints ?? 0}</strong>
                 </article>
-
-                <article className="card sim-panel">
-                    <h3>Mission Progress</h3>
-                    <p className="muted">
-                        Completed {completedCount} of {activities.length} operations
-                    </p>
+                <article className="metric-block">
+                    <p>Side Mission Progress</p>
+                    <strong>{sideMissionCompletedCount}</strong>
                 </article>
-            </div>
+            </section>
 
-            <section className="stack">
-                <h3>Operations Feed</h3>
-                <input
-                    value={activitySearch}
-                    onChange={(event) => setActivitySearch(event.target.value)}
-                    placeholder="Search operations by name, code, type, or description"
-                />
-                <div className="grid">
-                    {filteredActivities.map((item) => {
-                        const statusLabel = item.isCompleted
-                            ? 'Completed'
-                            : item.submissionStatus
-                                ? `Submitted (${item.submissionStatus})`
-                                : item.isActive
-                                    ? 'Pending'
-                                    : 'Inactive'
+            <section className="dashboard-panel stack">
+                <div className="section-head objective-console-head">
+                    <h3 className="section-heading">Objective Console</h3>
+                    <input
+                        value={activitySearch}
+                        onChange={(event) => setActivitySearch(event.target.value)}
+                        placeholder="Search objectives"
+                        style={{ maxWidth: 280 }}
+                    />
+                </div>
 
-                        return (
-                            <article key={item.id} className="card stack" style={{ minHeight: 170 }}>
-                                <div className="section-head">
-                                    <strong>{item.name}</strong>
-                                    <span className="status">{statusLabel}</span>
-                                </div>
-                                <p className="muted tiny">{item.activityTypeCode}</p>
-                                <p className="muted tiny">Points: {item.points}</p>
-                                <button type="button" onClick={() => openActivityDialog(item.id)}>
-                                    View Details
-                                </button>
-                            </article>
-                        )
-                    })}
-                    {!filteredActivities.length ? (
-                        <article className="card">
-                            <p className="muted">No activities match your search.</p>
-                        </article>
+                <div className="stack">
+                    <div className="section-head">
+                        <div className="objective-tabs" role="tablist" aria-label="Objective categories">
+                            <button
+                                type="button"
+                                className={activeObjectiveTab === 'main' ? 'objective-tab active' : 'objective-tab'}
+                                role="tab"
+                                aria-selected={activeObjectiveTab === 'main'}
+                                onClick={() => setActiveObjectiveTab('main')}
+                            >
+                                Main Objectives ({mainObjectives.length})
+                            </button>
+                            <button
+                                type="button"
+                                className={activeObjectiveTab === 'side' ? 'objective-tab active' : 'objective-tab'}
+                                role="tab"
+                                aria-selected={activeObjectiveTab === 'side'}
+                                onClick={() => setActiveObjectiveTab('side')}
+                            >
+                                Side Objectives ({sideObjectives.length})
+                            </button>
+                        </div>
+                        <label className="objective-mobile-filter" htmlFor="objective-category-select">
+                            <span className="tiny muted">Objective Category</span>
+                            <select
+                                id="objective-category-select"
+                                value={activeObjectiveTab}
+                                onChange={(event) =>
+                                    setActiveObjectiveTab(event.target.value === 'main' ? 'main' : 'side')
+                                }
+                            >
+                                <option value="main">Main Objectives ({mainObjectives.length})</option>
+                                <option value="side">Side Objectives ({sideObjectives.length})</option>
+                            </select>
+                        </label>
+                        <p className="muted tiny">
+                            {activeObjectiveTab === 'main'
+                                ? 'Core participation checkpoints.'
+                                : 'Optional and bonus mission tasks.'}
+                        </p>
+                    </div>
+
+                    {activeObjectiveTab === 'main' ? (
+                        <label className="toggle-row">
+                            <input
+                                type="checkbox"
+                                checked={showCompletedMainOnly}
+                                onChange={(event) => setShowCompletedMainOnly(event.target.checked)}
+                            />
+                            Completed main missions only
+                        </label>
+                    ) : null}
+
+                    {activeObjectiveTab === 'main' ? (
+                    <div className="objective-grid">
+                        {displayedMainObjectives.map((item) => {
+                            const statusLabel = item.isCompleted
+                                ? 'Completed'
+                                : item.submissionStatus
+                                    ? `Submitted (${item.submissionStatus})`
+                                    : item.isActive
+                                        ? 'Pending'
+                                        : 'Inactive'
+
+                            return (
+                                <article key={item.id} className="objective-row points-objective-row">
+                                    <div>
+                                        <p className="stream-title">{item.name}</p>
+                                        <p className="objective-meta">{item.description || 'No description provided.'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="objective-meta">Points: {item.points}</p>
+                                        <span className={`competition-status-pill ${item.isCompleted ? 'is-verified' : ''}`}>
+                                            {statusLabel}
+                                        </span>
+                                    </div>
+                                    <button type="button" className="outline-button" onClick={() => openActivityDialog(item.id)}>
+                                        Details
+                                    </button>
+                                </article>
+                            )
+                        })}
+                        {!displayedMainObjectives.length ? <p className="muted">No completed main missions match your current filter.</p> : null}
+                    </div>
+                    ) : null}
+
+                    {activeObjectiveTab === 'side' ? (
+                    <div className="objective-grid">
+                        {sideObjectives.map((item) => {
+                            const statusLabel = item.isCompleted
+                                ? 'Completed'
+                                : item.submissionStatus
+                                    ? `Submitted (${item.submissionStatus})`
+                                    : item.isActive
+                                        ? 'Pending'
+                                        : 'Inactive'
+
+                            return (
+                                <article key={item.id} className="objective-row points-objective-row">
+                                    <div>
+                                        <p className="stream-title">{item.name}</p>
+                                        <p className="objective-meta">{item.description || 'No description provided.'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="objective-meta">Points: {item.points}</p>
+                                        <span className={`competition-status-pill ${item.isCompleted ? 'is-verified' : ''}`}>
+                                            {statusLabel}
+                                        </span>
+                                    </div>
+                                    <button type="button" className="outline-button" onClick={() => openActivityDialog(item.id)}>
+                                        Details
+                                    </button>
+                                </article>
+                            )
+                        })}
+                        {!sideObjectives.length ? <p className="muted">No side objectives match your search.</p> : null}
+                    </div>
                     ) : null}
                 </div>
             </section>
@@ -218,7 +325,6 @@ export function PointsPage() {
                 <div className="admin-dialog-backdrop" role="presentation" onClick={closeActivityDialog}>
                     <div className="admin-dialog" role="dialog" aria-live="polite" onClick={(event) => event.stopPropagation()}>
                         <h3>{selectedActivity.name}</h3>
-                        <p className="muted tiny">{selectedActivity.activityTypeCode}</p>
                         <p className="muted tiny">{selectedActivity.description || 'No description'}</p>
                         <div className="data-list compact">
                             <div>

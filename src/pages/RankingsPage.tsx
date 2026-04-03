@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { api } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import type { PointsLeaderboardItem } from '../types/api'
+import { TechLoader } from '../components/TechLoader'
 
 export function RankingsPage() {
     const { participant } = useAuth()
@@ -30,21 +31,26 @@ export function RankingsPage() {
         : 0
 
     return (
-        <section className="stack">
-            <h2>Global Simulation Leaderboard</h2>
+        <section className="dashboard-shell stack">
+            <header className="panel-header">
+                <h2 className="page-heading">Global Simulation Leaderboard</h2>
+                <p className="muted tiny">Top participants ranked by total points.</p>
+            </header>
 
-            {loading ? <div className="center-state">Syncing leaderboard feed...</div> : null}
+            {loading ? <TechLoader label="Syncing leaderboard feed..." /> : null}
             {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
 
             {!loading && !errorMessage ? (
                 <>
                 {yourRank ? (
-                    <article className="card sim-panel">
-                        <h3>Your Signal Position</h3>
-                        <p className="muted">You are currently ranked <strong>#{yourRank}</strong> in the global simulation leaderboard.</p>
-                    </article>
+                    <section className="dashboard-metrics-strip" aria-label="Your ranking">
+                        <article className="metric-block">
+                            <p>Your Signal Position</p>
+                            <strong>#{yourRank}</strong>
+                        </article>
+                    </section>
                 ) : null}
-                <div className="card table-wrap table-scroll-y sim-panel">
+                <div className="dashboard-panel table-wrap table-scroll-y sim-panel">
                     <table>
                         <thead>
                             <tr>

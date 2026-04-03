@@ -14,7 +14,6 @@ import { PointsPage } from './pages/PointsPage'
 import { RankingsPage } from './pages/RankingsPage'
 import { SignupPage } from './pages/SignupPage'
 import { SignupVerifyPage } from './pages/SignupVerifyPage'
-import { TeamDetailPage } from './pages/TeamDetailPage'
 
 function App() {
   return (
@@ -35,7 +34,6 @@ function App() {
           <Route path="my-competitions" element={<MyCompetitionsPage />} />
           <Route path="competitions" element={<CompetitionsPage />} />
           <Route path="competitions/:competitionId" element={<CompetitionDetailPage />} />
-          <Route path="teams/:teamId" element={<TeamDetailPage />} />
           <Route path="rankings" element={<RankingsPage />} />
           <Route path="points" element={<PointsPage />} />
         </Route>

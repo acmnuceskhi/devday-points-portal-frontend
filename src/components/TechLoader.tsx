@@ -4,7 +4,7 @@ type TechLoaderProps = {
 
 export function TechLoader({ label = 'Syncing data...' }: TechLoaderProps) {
   return (
-    <div className="tech-loader" role="status" aria-live="polite" aria-label={label}>
+    <div className="tech-loader py-32" role="status" aria-live="polite" aria-label={label}>
       <div className="tech-loader-track">
         <span className="tech-loader-dot" />
       </div>

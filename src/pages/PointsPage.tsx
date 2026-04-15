@@ -164,7 +164,7 @@ export function PointsPage() {
     }
 
     if (loading) {
-        return <TechLoader label="Loading signal score..." />
+        return <TechLoader label="Loading points..." />
     }
 
     if (errorMessage) {
@@ -173,29 +173,24 @@ export function PointsPage() {
 
     return (
         <section className="dashboard-shell stack">
-            <header className="panel-header">
-                <h2 className="page-heading">Simulation Score Grid</h2>
-                <p className="muted tiny">Track your points and objective progress across the runtime.</p>
-            </header>
-
             <section className="dashboard-metrics-strip" aria-label="Points metrics">
                 <article className="metric-block">
-                    <p>Total Signal Score</p>
+                    <p>Total Points</p>
                     <strong>{summary?.totalPoints ?? 0}</strong>
                 </article>
                 <article className="metric-block">
-                    <p>Side Mission Progress</p>
+                    <p>Activities Completed</p>
                     <strong>{sideMissionCompletedCount}</strong>
                 </article>
             </section>
 
             <section className="dashboard-panel stack">
                 <div className="section-head objective-console-head">
-                    <h3 className="section-heading">Objective Console</h3>
+                    <h3 className="section-heading">Activities</h3>
                     <input
                         value={activitySearch}
                         onChange={(event) => setActivitySearch(event.target.value)}
-                        placeholder="Search objectives"
+                        placeholder="Search activities"
                         style={{ maxWidth: 280 }}
                     />
                 </div>
@@ -210,7 +205,7 @@ export function PointsPage() {
                                 aria-selected={activeObjectiveTab === 'main'}
                                 onClick={() => setActiveObjectiveTab('main')}
                             >
-                                Main Objectives ({mainObjectives.length})
+                                Main Activities ({mainObjectives.length})
                             </button>
                             <button
                                 type="button"
@@ -219,11 +214,11 @@ export function PointsPage() {
                                 aria-selected={activeObjectiveTab === 'side'}
                                 onClick={() => setActiveObjectiveTab('side')}
                             >
-                                Side Objectives ({sideObjectives.length})
+                                Side Activities ({sideObjectives.length})
                             </button>
                         </div>
                         <label className="objective-mobile-filter" htmlFor="objective-category-select">
-                            <span className="tiny muted">Objective Category</span>
+                            <span className="tiny muted">Activity Category</span>
                             <select
                                 id="objective-category-select"
                                 value={activeObjectiveTab}
@@ -231,14 +226,14 @@ export function PointsPage() {
                                     setActiveObjectiveTab(event.target.value === 'main' ? 'main' : 'side')
                                 }
                             >
-                                <option value="main">Main Objectives ({mainObjectives.length})</option>
-                                <option value="side">Side Objectives ({sideObjectives.length})</option>
+                                <option value="main">Main Activities ({mainObjectives.length})</option>
+                                <option value="side">Side Activities ({sideObjectives.length})</option>
                             </select>
                         </label>
                         <p className="muted tiny">
                             {activeObjectiveTab === 'main'
-                                ? 'Core participation checkpoints.'
-                                : 'Optional and bonus mission tasks.'}
+                                ? 'Core competition participation checkpoints.'
+                                : 'Optional and bonus activities.'}
                         </p>
                     </div>
 
@@ -249,74 +244,74 @@ export function PointsPage() {
                                 checked={showCompletedMainOnly}
                                 onChange={(event) => setShowCompletedMainOnly(event.target.checked)}
                             />
-                            Completed main missions only
+                            Completed main activities only
                         </label>
                     ) : null}
 
                     {activeObjectiveTab === 'main' ? (
-                    <div className="objective-grid">
-                        {displayedMainObjectives.map((item) => {
-                            const statusLabel = item.isCompleted
-                                ? 'Completed'
-                                : item.submissionStatus
-                                    ? `Submitted (${item.submissionStatus})`
-                                    : item.isActive
-                                        ? 'Pending'
-                                        : 'Inactive'
+                        <div className="objective-grid">
+                            {displayedMainObjectives.map((item) => {
+                                const statusLabel = item.isCompleted
+                                    ? 'Completed'
+                                    : item.submissionStatus
+                                        ? `Submitted (${item.submissionStatus})`
+                                        : item.isActive
+                                            ? 'Pending'
+                                            : 'Inactive'
 
-                            return (
-                                <article key={item.id} className="objective-row points-objective-row">
-                                    <div>
-                                        <p className="stream-title">{item.name}</p>
-                                        <p className="objective-meta">{item.description || 'No description provided.'}</p>
-                                    </div>
-                                    <div>
-                                        <p className="objective-meta">Points: {item.points}</p>
-                                        <span className={`competition-status-pill ${item.isCompleted ? 'is-verified' : ''}`}>
-                                            {statusLabel}
-                                        </span>
-                                    </div>
-                                    <button type="button" className="outline-button" onClick={() => openActivityDialog(item.id)}>
-                                        Details
-                                    </button>
-                                </article>
-                            )
-                        })}
-                        {!displayedMainObjectives.length ? <p className="muted">No completed main missions match your current filter.</p> : null}
-                    </div>
+                                return (
+                                    <article key={item.id} className="objective-row points-objective-row">
+                                        <div>
+                                            <p className="stream-title">{item.name}</p>
+                                            <p className="objective-meta">{item.description || 'No description provided.'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="objective-meta">Points: {item.points}</p>
+                                            <span className={`competition-status-pill ${item.isCompleted ? 'is-verified' : ''}`}>
+                                                {statusLabel}
+                                            </span>
+                                        </div>
+                                        <button type="button" className="outline-button" onClick={() => openActivityDialog(item.id)}>
+                                            Details
+                                        </button>
+                                    </article>
+                                )
+                            })}
+                            {!displayedMainObjectives.length ? <p className="muted">No completed main activities match your current filter.</p> : null}
+                        </div>
                     ) : null}
 
                     {activeObjectiveTab === 'side' ? (
-                    <div className="objective-grid">
-                        {sideObjectives.map((item) => {
-                            const statusLabel = item.isCompleted
-                                ? 'Completed'
-                                : item.submissionStatus
-                                    ? `Submitted (${item.submissionStatus})`
-                                    : item.isActive
-                                        ? 'Pending'
-                                        : 'Inactive'
+                        <div className="objective-grid">
+                            {sideObjectives.map((item) => {
+                                const statusLabel = item.isCompleted
+                                    ? 'Completed'
+                                    : item.submissionStatus
+                                        ? `Submitted (${item.submissionStatus})`
+                                        : item.isActive
+                                            ? 'Pending'
+                                            : 'Inactive'
 
-                            return (
-                                <article key={item.id} className="objective-row points-objective-row">
-                                    <div>
-                                        <p className="stream-title">{item.name}</p>
-                                        <p className="objective-meta">{item.description || 'No description provided.'}</p>
-                                    </div>
-                                    <div>
-                                        <p className="objective-meta">Points: {item.points}</p>
-                                        <span className={`competition-status-pill ${item.isCompleted ? 'is-verified' : ''}`}>
-                                            {statusLabel}
-                                        </span>
-                                    </div>
-                                    <button type="button" className="outline-button" onClick={() => openActivityDialog(item.id)}>
-                                        Details
-                                    </button>
-                                </article>
-                            )
-                        })}
-                        {!sideObjectives.length ? <p className="muted">No side objectives match your search.</p> : null}
-                    </div>
+                                return (
+                                    <article key={item.id} className="objective-row points-objective-row">
+                                        <div>
+                                            <p className="stream-title">{item.name}</p>
+                                            <p className="objective-meta">{item.description || 'No description provided.'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="objective-meta">Points: {item.points}</p>
+                                            <span className={`competition-status-pill ${item.isCompleted ? 'is-verified' : ''}`}>
+                                                {statusLabel}
+                                            </span>
+                                        </div>
+                                        <button type="button" className="outline-button" onClick={() => openActivityDialog(item.id)}>
+                                            Details
+                                        </button>
+                                    </article>
+                                )
+                            })}
+                            {!sideObjectives.length ? <p className="muted">No side activities match your search.</p> : null}
+                        </div>
                     ) : null}
                 </div>
             </section>

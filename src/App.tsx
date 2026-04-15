@@ -31,9 +31,9 @@ function App() {
           }
         >
           <Route index element={<DashboardPage />} />
-          <Route path="my-competitions" element={<MyCompetitionsPage />} />
-          <Route path="competitions" element={<CompetitionsPage />} />
-          <Route path="competitions/:competitionId" element={<CompetitionDetailPage />} />
+          {/* <Route path="my-competitions" element={<MyCompetitionsPage />} /> */}
+          {/* <Route path="competitions" element={<CompetitionsPage />} />
+          <Route path="competitions/:competitionId" element={<CompetitionDetailPage />} /> */}
           <Route path="rankings" element={<RankingsPage />} />
           <Route path="points" element={<PointsPage />} />
         </Route>

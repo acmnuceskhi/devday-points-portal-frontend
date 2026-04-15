@@ -47,9 +47,9 @@ export function LoginPage() {
                     <img src="/devday-logo.png" alt="DevDay logo" style={{ width: 34, height: 50, objectFit: 'contain' }} />
                 </div>
                 <div className="auth-headline">
-                    <p className="eyebrow">Devday 2026 | Simulation Access</p>
-                    <h1 className="auth-title">Operator Authentication</h1>
-                    <p className="auth-subtitle">Authenticate with your participant credentials to sync your mission console.</p>
+                    <p className="eyebrow">Devday 2026 | Portal Access</p>
+                    <h1 className="auth-title">Participant Login</h1>
+                    <p className="auth-subtitle">Login with your participant credentials to access your dashboard.</p>
                 </div>
 
                 <form className="auth-form" onSubmit={onSubmit}>
@@ -80,16 +80,16 @@ export function LoginPage() {
                     {errorMessage ? <p className="error-banner" role="alert">{errorMessage}</p> : null}
 
                     <button type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? 'Establishing Session...' : 'Enter Console'}
+                        {isSubmitting ? 'Logging In...' : 'Login'}
                     </button>
                 </form>
 
                 <p className="auth-status">
-                    Mission note: if you already joined a competition, use the same email to preserve your signal score.
+                    Important: if you already joined a competition, use the same email to keep your points in one place.
                 </p>
 
                 <p className="muted tiny">
-                    New operator? <Link to="/signup">Request access link</Link>
+                    New participant? <Link to="/signup">Create account</Link>
                 </p>
             </section>
         </div>

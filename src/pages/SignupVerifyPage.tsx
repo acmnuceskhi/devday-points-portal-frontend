@@ -43,9 +43,9 @@ export function SignupVerifyPage() {
     <div className="auth-page">
       <section className="auth-card">
         <div className="auth-headline">
-          <p className="eyebrow">Devday 2026 | OTP Verification</p>
-          <h1 className="auth-title">Complete Operator Handshake</h1>
-          <p className="auth-subtitle">Use your secure email link to lock in your console credentials.</p>
+          <p className="eyebrow">Devday 2026 | Account Verification</p>
+          <h1 className="auth-title">Complete Email Verification</h1>
+          <p className="auth-subtitle">Use the verification link from your email to complete account setup.</p>
         </div>
 
         <form className="auth-form" onSubmit={onSubmit}>
@@ -88,7 +88,7 @@ export function SignupVerifyPage() {
           </label>
 
           <button type="submit" disabled={isSubmitting || !token}>
-            {isSubmitting ? 'Verifying Handshake...' : 'Verify and Enter Console'}
+            {isSubmitting ? 'Verifying...' : 'Verify and Continue'}
           </button>
         </form>
 
@@ -99,7 +99,7 @@ export function SignupVerifyPage() {
         {message ? <p className="status">{message}</p> : null}
 
         <p className="muted tiny">
-          OTP expired? <Link to="/signup">Request new access link</Link>
+          Verification link expired? <Link to="/signup">Request a new link</Link>
         </p>
       </section>
     </div>

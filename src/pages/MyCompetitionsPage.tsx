@@ -60,7 +60,7 @@ export function MyCompetitionsPage() {
   }
 
   if (loading) {
-    return <TechLoader label="Loading main missions..." />
+    return <TechLoader label="Loading competitions..." />
   }
 
   if (errorMessage) {
@@ -75,8 +75,8 @@ export function MyCompetitionsPage() {
     <section className="dashboard-shell stack">
       <header className="section-head mission-queue-head">
         <div className="panel-header">
-          <h2 className="page-heading">Main Missions</h2>
-          <p className="muted tiny">Live schedule from the simulation runtime.</p>
+          <h2 className="page-heading">My Competitions</h2>
+          <p className="muted tiny">Live schedule for your registered competitions.</p>
         </div>
         <div className="actions-row">
           <a className="link-button" href="https://devday26.com/modules" target="_blank" rel="noreferrer">
@@ -88,30 +88,30 @@ export function MyCompetitionsPage() {
       <div className="dashboard-export-frame stack" id="my-competitions-export">
         <section className="dashboard-panel">
           <div className="stream-list">
-        {items.map((item) => (
-          <article key={`${item.teamId}-${item.competitionId}`} className="stream-row">
-            <div>
-              <p className="stream-title">{item.competitionName}</p>
-              <p className="stream-subline">
-                {formatCompetitionSchedule(item)}
-              </p>
-            </div>
-            <p className="mission-team">
-              {item.teamName} {item.isLeader ? '(Leader)' : ''}
-            </p>
-            <p className="mission-venue">
-              {item.venues?.length
-                ? item.venues.map((venue) => venue.name).join(', ')
-                : item.venueName || 'TBA'}
-            </p>
-            <span className={`competition-status-pill ${item.paymentStatus === 'Paid' ? 'is-verified' : ''}`}>
-              {item.paymentStatus}
-            </span>
-            <button type="button" className="outline-button team-details-button" onClick={() => void onOpenTeam(item.teamId)}>
-              Team Details
-            </button>
-          </article>
-        ))}
+            {items.map((item) => (
+              <article key={`${item.teamId}-${item.competitionId}`} className="stream-row">
+                <div>
+                  <p className="stream-title">{item.competitionName}</p>
+                  <p className="stream-subline">
+                    {formatCompetitionSchedule(item)}
+                  </p>
+                </div>
+                <p className="mission-team">
+                  {item.teamName} {item.isLeader ? '(Leader)' : ''}
+                </p>
+                <p className="mission-venue">
+                  {item.venues?.length
+                    ? item.venues.map((venue) => venue.name).join(', ')
+                    : item.venueName || 'TBA'}
+                </p>
+                <span className={`competition-status-pill ${item.paymentStatus === 'Paid' ? 'is-verified' : ''}`}>
+                  {item.paymentStatus}
+                </span>
+                <button type="button" className="outline-button team-details-button" onClick={() => void onOpenTeam(item.teamId)}>
+                  Team Details
+                </button>
+              </article>
+            ))}
           </div>
         </section>
       </div>

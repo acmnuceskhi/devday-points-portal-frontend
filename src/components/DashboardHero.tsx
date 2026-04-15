@@ -19,7 +19,7 @@ const DashboardHero: React.FC<DashboardHeroProps> = ({
             Welcome, <span className="text-white">{participantName}</span>
           </h1>
           <p className="muted mt-2 text-sm md:text-base">
-            Your central command for DevDay 2026 missions.
+            Your central command for the Developer's Day experience.
           </p>
         </div>
 
@@ -38,7 +38,7 @@ const DashboardHero: React.FC<DashboardHeroProps> = ({
             />
             <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="2" />
           </svg>
-          <span>{isExporting ? 'Exporting...' : 'Download Snapshot'}</span>
+          <span>{isExporting ? 'Exporting...' : 'Save Details'}</span>
         </button>
       </div>
     </div>

@@ -29,49 +29,74 @@ export function RankingsPage() {
     const yourRank = participant
         ? items.findIndex((item) => item.participantId === participant.id) + 1
         : 0
+    const yourEntry = participant ? items.find((item) => item.participantId === participant.id) || null : null
+
+    const getRankNumberClass = (rank: number) => {
+        if (rank === 1) return 'rank-number top-1'
+        if (rank === 2) return 'rank-number top-2'
+        if (rank === 3) return 'rank-number top-3'
+        return 'rank-number'
+    }
 
     return (
         <section className="dashboard-shell stack">
+
             <header className="panel-header">
-                <h2 className="page-heading">Global Simulation Leaderboard</h2>
-                <p className="muted tiny">Top participants ranked by total points.</p>
+                <h1 className="page-heading text-4xl my-5 md:hidden">Leaderboard</h1>
+                <h1 className="page-heading text-4xl my-5 hidden md:block">Points Leaderboard</h1>
             </header>
 
-            {loading ? <TechLoader label="Syncing leaderboard feed..." /> : null}
+            {loading ? <TechLoader label="Loading leaderboard..." /> : null}
             {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
 
             {!loading && !errorMessage ? (
                 <>
-                {yourRank ? (
-                    <section className="dashboard-metrics-strip" aria-label="Your ranking">
-                        <article className="metric-block">
-                            <p>Your Signal Position</p>
-                            <strong>#{yourRank}</strong>
-                        </article>
+                    <section className="leaderboard-inline-rank mx-[5%] md:w-[60%] md:mx-[20%]" aria-label="Participant ranking summary">
+                        <div>
+                            <p className="leaderboard-inline-label">Your Rank</p>
+                            <strong className="md:text-3xl text-red-500">{yourRank ? `#${yourRank}` : '--'}</strong>
+                        </div>
+                        <div className="leaderboard-inline-right">
+                            <p className="leaderboard-inline-label">Your Points</p>
+                            <strong className="md:text-3xl">{yourEntry ? yourEntry.totalPoints : '--'}</strong>
+                        </div>
                     </section>
-                ) : null}
-                <div className="dashboard-panel table-wrap table-scroll-y sim-panel">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Name</th>
-                                <th>Institution</th>
-                                <th>Total Points</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {items.map((item, index) => (
-                                <tr key={item.participantId}>
-                                    <td>{index + 1}</td>
-                                    <td>{item.fullName}</td>
-                                    <td>{item.institution || '-'}</td>
-                                    <td>{item.totalPoints}</td>
+
+                    {!yourRank ? (
+                        <p className="muted tiny leaderboard-note">
+                            Your rank will appear here once your participant profile is in the top 100 list.
+                        </p>
+                    ) : null}
+
+                    <div className="dashboard-panel md:w-[60%] md:mx-[20%] table-wrap table-scroll-y sim-panel leaderboard-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Name</th>
+                                    <th>Institution</th>
+                                    <th>Total Points</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                {items.map((item, index) => {
+                                    const rank = index + 1
+                                    const isCurrentParticipant = participant ? item.participantId === participant.id : false
+
+                                    return (
+                                        <tr key={item.participantId} className={isCurrentParticipant ? 'current-user-row' : ''}>
+                                            <td>
+                                                <span className={getRankNumberClass(rank)}>{rank}</span>
+                                            </td>
+                                            <td>{item.fullName}</td>
+                                            <td>{item.institution || '-'}</td>
+                                            <td>{item.totalPoints}</td>
+                                        </tr>
+                                    )
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
                 </>
             ) : null}
         </section>

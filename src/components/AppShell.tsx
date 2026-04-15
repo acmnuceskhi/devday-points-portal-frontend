@@ -2,9 +2,9 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 const navItems = [
-    { label: 'Console', to: '/' },
-    { label: 'Main Missions', to: '/my-competitions' },
-    { label: 'Signal Score', to: '/points' },
+    { label: 'Dashboard', to: '/' },
+    // { label: 'My Competitions', to: '/my-competitions' },
+    { label: 'Points/Activities', to: '/points' },
     { label: 'Leaderboard', to: '/rankings' },
 ]
 
@@ -34,12 +34,12 @@ export function AppShell() {
                             style={{ width: 52, height: 72, objectFit: 'contain' }}
                         />
                         <div className="portal-title-block">
-                            <p className="eyebrow">DEVDAY '26 | VR SIMULATION</p>
-                            <h1 className="portal-title-main main-heading">VR Operator Console</h1>
+                            <p className="eyebrow">DEVDAY '26</p>
+                            <h1 className="portal-title-main main-heading">DevDay Particpant Portal</h1>
                         </div>
                     </div>
 
-                    <button className="outline-button logout-button" onClick={onLogout} aria-label="End session">
+                    <button className="outline-button logout-button" onClick={onLogout} aria-label="Logout">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
                             <path
                                 d="M14 7V4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-3"
@@ -56,7 +56,7 @@ export function AppShell() {
                                 strokeLinejoin="round"
                             />
                         </svg>
-                        <span className="logout-label">End Session</span>
+                        <span className="logout-label">Logout</span>
                     </button>
                 </div>
             </header>
@@ -82,9 +82,9 @@ export function AppShell() {
                         value={location.pathname}
                         onChange={(event) => onMobileNavChange(event.target.value)}
                     >
-                        <option value="/">Console</option>
-                        <option value="/my-competitions">Main Missions</option>
-                        <option value="/points">Signal Score</option>
+                        <option value="/">Dashboard</option>
+                        {/* <option value="/my-competitions">My Competitions</option> */}
+                        <option value="/points">Points</option>
                         <option value="/rankings">Leaderboard</option>
                     </select>
                 </label>

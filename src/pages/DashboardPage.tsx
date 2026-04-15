@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { exportElementAsImage } from '../lib/exportAsImage';
 import { api } from '../lib/api';
@@ -76,7 +75,17 @@ export function DashboardPage() {
     setSelectedTeamLoading(false);
   };
 
-  const firstName = participant?.fullName?.trim().split(/\s+/)[0] || 'Operator';
+  const firstName = participant?.fullName?.trim().split(/\s+/)[0] || 'Participant';
+  const profileDetails = [
+    { label: 'Full Name', value: participant?.fullName },
+    { label: 'Email', value: participant?.email },
+    { label: 'Phone', value: participant?.phone },
+    { label: 'Institution', value: participant?.institution },
+    { label: 'CNIC', value: participant?.cnic },
+    { label: 'Roll Number', value: participant?.rollNumber },
+    { label: 'Minigame Code', value: participant?.minigameCode },
+  ];
+
   return (
     <div className="space-y-6">
       <DashboardHero
@@ -90,51 +99,27 @@ export function DashboardPage() {
       <div id="dashboard-sim-export" className="dashboard-export-frame">
         <div className="participant-main-grid">
           <aside className="dashboard-panel profile-panel">
-            <h3 className="section-heading">Operator Profile</h3>
+            <h3 className="section-heading">Your Profile</h3>
             <dl className="space-y-3">
-              <div>
-                <dt className="text-sm font-semibold text-[#ff2a2f]">Full Name</dt>
-                <dd className="text-white">{participant?.fullName || '-'}</dd>
-              </div>
-              <div>
-                <dt className="text-sm font-semibold text-[#ff2a2f]">Email</dt>
-                <dd className="text-white">{participant?.email || '-'}</dd>
-              </div>
-              <div>
-                <dt className="text-sm font-semibold text-[#ff2a2f]">Phone</dt>
-                <dd className="text-white">{participant?.phone || '-'}</dd>
-              </div>
-              <div>
-                <dt className="text-sm font-semibold text-[#ff2a2f]">Institution</dt>
-                <dd className="text-white">{participant?.institution || '-'}</dd>
-              </div>
-              <div>
-                <dt className="text-sm font-semibold text-[#ff2a2f]">CNIC</dt>
-                <dd className="text-white">{participant?.cnic || '-'}</dd>
-              </div>
-              <div>
-                <dt className="text-sm font-semibold text-[#ff2a2f]">Roll Number</dt>
-                <dd className="text-white">{participant?.rollNumber || '-'}</dd>
-              </div>
-              <div>
-                <dt className="text-sm font-semibold text-[#ff2a2f]">Minigame Code</dt>
-                <dd className="text-white">{participant?.minigameCode || '-'}</dd>
-              </div>
+              {profileDetails.map((detail) => (
+                <div key={detail.label} className="flex items-center justify-between gap-4">
+                  <dt className="text-sm font-semibold text-[#ff2a2f]">{detail.label}</dt>
+                  <dd className="text-white text-right">{detail.value || '-'}</dd>
+                </div>
+              ))}
             </dl>
           </aside>
 
           <section className="dashboard-panel mission-stream">
             <div className="flex justify-between items-center mb-4">
               <div>
-                <h3 className="section-heading">Mission Stream</h3>
-                <p className="muted tiny">Upcoming and registered squad operations.</p>
+                <h3 className="section-heading">Your Competitions</h3>
+                <p className="muted tiny">Upcoming and registered competitions.</p>
               </div>
-              <Link to="/my-competitions" className="text-[#ff2a2f] hover:text-[#ff2a2f] transition-colors">
-                View All
-              </Link>
             </div>
 
-            {loadingCompetitions && <TechLoader label="Loading mission stream..." />}
+            {loadingCompetitions &&
+              <TechLoader label="Loading competitions..." />}
             {competitionsError && <div className="text-[#ff2a2f] bg-[#ff2a2f]/15 p-3 rounded-lg">{competitionsError}</div>}
 
             {!loadingCompetitions && !competitionsError && (
@@ -161,7 +146,7 @@ export function DashboardPage() {
                     </button>
                   </article>
                 ))}
-                {!competitions.length && <p className="text-gray-500">No missions assigned yet.</p>}
+                {!competitions.length && <p className="text-gray-500 text-center py-36">Looks like you haven't registered for any competitions yet.</p>}
               </div>
             )}
           </section>

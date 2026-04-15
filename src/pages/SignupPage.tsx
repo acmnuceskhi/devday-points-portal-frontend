@@ -46,10 +46,10 @@ export function SignupPage() {
     <div className="auth-page">
       <section className="auth-card">
         <div className="auth-headline">
-          <p className="eyebrow">Devday 2026 | Access Provisioning</p>
-          <h1 className="auth-title">Initialize Operator Access</h1>
+          <p className="eyebrow">Devday 2026 | Account Registration</p>
+          <h1 className="auth-title">Create Participant Account</h1>
           <p className="auth-subtitle">
-            Request a secure OTP link to create your participant console session.
+            Request a secure verification link to create your participant account.
           </p>
         </div>
 
@@ -79,7 +79,7 @@ export function SignupPage() {
           </label>
 
           <button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Requesting Secure Link...' : 'Request OTP Access Link'}
+            {isSubmitting ? 'Sending Verification Link...' : 'Send Verification Link'}
           </button>
         </form>
 
@@ -87,7 +87,7 @@ export function SignupPage() {
         {hint ? <p className="muted tiny">{hint}</p> : null}
         {registeredLoginPath ? (
           <p className="tiny">
-            Existing operator detected. Continue to <Link to={registeredLoginPath}>console login</Link> with this email.
+            Existing participant detected. Continue to <Link to={registeredLoginPath}>login</Link> with this email.
           </p>
         ) : null}
         {signupLink ? (
@@ -96,10 +96,10 @@ export function SignupPage() {
           </p>
         ) : null}
 
-        <p className="auth-status">Use your competition-registered email so mission progress and points remain unified.</p>
+        <p className="auth-status">Use your competition-registered email so your activity progress and points remain unified.</p>
 
         <p className="muted tiny">
-          Access already initialized? <Link to="/login">Enter console</Link>
+          Already registered? <Link to="/login">Login</Link>
         </p>
       </section>
     </div>

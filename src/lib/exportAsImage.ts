@@ -6,11 +6,23 @@ export async function exportElementAsImage(elementId: string, fileNamePrefix: st
         throw new Error('Could not find export target on this page.')
     }
 
+    const exportWidth = element.scrollWidth || element.clientWidth
+    const exportHeight = element.scrollHeight || element.clientHeight
+
+    if (!exportWidth || !exportHeight) {
+        throw new Error('Export template is not ready yet. Please try again.')
+    }
+
     const dataUrl = await toPng(element, {
         cacheBust: true,
         pixelRatio: 2,
-        backgroundColor: '#130808',
+        width: exportWidth,
+        height: exportHeight,
         skipFonts: true,
+        style: {
+            opacity: '1',
+            visibility: 'visible',
+        },
     })
 
     const link = document.createElement('a')

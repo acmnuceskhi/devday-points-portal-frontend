@@ -39,26 +39,29 @@ export function RankingsPage() {
     }
 
     return (
-        <section className="dashboard-shell stack">
-
-            <header className="panel-header">
-                <h1 className="page-heading text-4xl my-5 md:hidden">Leaderboard</h1>
-                <h1 className="page-heading text-4xl my-5 hidden md:block">Points Leaderboard</h1>
-            </header>
+        <section className="dashboard-shell stack px-5 md:px-0">
+            <section className="space-y-2 border-b border-[#2a2a34] pb-4">
+                <p className="text-[11px] uppercase tracking-[0.16em] text-[#b8b8c2]">Rankings</p>
+                <h2 className="text-2xl font-bold leading-tight text-white md:text-3xl">Points Leaderboard</h2>
+                <p className="text-sm text-[#a9a9b4]">See how participants rank by total points across the event.</p>
+            </section>
 
             {loading ? <TechLoader label="Loading leaderboard..." /> : null}
             {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
 
             {!loading && !errorMessage ? (
                 <>
-                    <section className="leaderboard-inline-rank mx-[5%] md:w-[60%] md:mx-[20%]" aria-label="Participant ranking summary">
+                    <section className="grid grid-cols-[1.4fr_1fr] gap-3 border-b border-[#2f2f38] pb-4" aria-label="Participant ranking summary">
                         <div>
-                            <p className="leaderboard-inline-label">Your Rank</p>
-                            <strong className="md:text-3xl text-red-500">{yourRank ? `#${yourRank}` : '--'}</strong>
+                            <p className="text-[11px] uppercase tracking-[0.14em] text-[#b8b8c2]">Your Rank</p>
+                            <strong className="mt-1 block text-[2.1rem] leading-none text-[#ff2a2f] md:text-[2.5rem]">{yourRank ? `#${yourRank}` : '--'}</strong>
+                            <p className="mt-1 text-xs text-[#a9a9b4]">Current position in the top 100 leaderboard.</p>
                         </div>
-                        <div className="leaderboard-inline-right">
-                            <p className="leaderboard-inline-label">Your Points</p>
-                            <strong className="md:text-3xl">{yourEntry ? yourEntry.totalPoints : '--'}</strong>
+
+                        <div className="text-right">
+                            <p className="text-[11px] uppercase tracking-[0.14em] text-[#b8b8c2]">Your Points</p>
+                            <strong className="mt-1 block text-[1.5rem] leading-none text-white md:text-[1.8rem]">{yourEntry ? yourEntry.totalPoints : '--'}</strong>
+                            <p className="mt-1 text-xs text-[#a9a9b4]">Total points counted for ranking.</p>
                         </div>
                     </section>
 
@@ -68,7 +71,7 @@ export function RankingsPage() {
                         </p>
                     ) : null}
 
-                    <div className="dashboard-panel md:w-[60%] md:mx-[20%] table-wrap table-scroll-y sim-panel leaderboard-table">
+                    <div className="dashboard-panel table-wrap table-scroll-y sim-panel leaderboard-table">
                         <table>
                             <thead>
                                 <tr>

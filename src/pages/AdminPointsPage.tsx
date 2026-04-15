@@ -26,6 +26,7 @@ type ParticipantWorkflowTab =
     | 'completed-activities'
 
 type ActivitiesTab = 'activity-management' | 'review-submissions' | 'points-config'
+type ActivityManagementTab = 'competitions' | 'activities'
 
 type ParticipantLookup = {
     participantId: string
@@ -60,6 +61,7 @@ export function AdminPointsPage() {
     const [activeTab, setActiveTab] = useState<AdminTab>('participant-workflow')
     const [activeParticipantWorkflowTab, setActiveParticipantWorkflowTab] = useState<ParticipantWorkflowTab>('participant-info')
     const [activeActivitiesTab, setActiveActivitiesTab] = useState<ActivitiesTab>('activity-management')
+    const [activeActivityManagementTab, setActiveActivityManagementTab] = useState<ActivityManagementTab>('activities')
     const [participants, setParticipants] = useState<ParticipantLookup[]>([])
     const [activities, setActivities] = useState<ActivityType[]>([])
     const [activityKinds, setActivityKinds] = useState<ActivityKind[]>([])
@@ -81,6 +83,7 @@ export function AdminPointsPage() {
     const [newActivityCorrectAnswer, setNewActivityCorrectAnswer] = useState('')
 
     const [completionActivityId, setCompletionActivityId] = useState('')
+    const [completionActivitySearch, setCompletionActivitySearch] = useState('')
     const [completionNote, setCompletionNote] = useState('')
     const [completionSubmissionEvidence, setCompletionSubmissionEvidence] = useState<ActivitySubmission | null>(null)
     const [completionSubmissionEvidenceLoading, setCompletionSubmissionEvidenceLoading] = useState(false)
@@ -101,6 +104,7 @@ export function AdminPointsPage() {
     const [editActivityDescription, setEditActivityDescription] = useState('')
     const [activitySearch, setActivitySearch] = useState('')
     const [reviewActivityId, setReviewActivityId] = useState('')
+    const [reviewActivitySearch, setReviewActivitySearch] = useState('')
     const [reviewStatusFilter, setReviewStatusFilter] = useState<'PENDING' | 'APPROVED' | 'REJECTED' | ''>('PENDING')
     const [activitySubmissions, setActivitySubmissions] = useState<ActivitySubmission[]>([])
     const [activitySubmissionsLoading, setActivitySubmissionsLoading] = useState(false)
@@ -339,9 +343,46 @@ export function AdminPointsPage() {
             .slice(0, 30)
     }, [participantSearch, participants])
 
-    const activityOptions = useMemo(
-        () => activities.map((item) => ({ value: item.id, label: `${item.code} - ${item.name} (${item.activityTypeCode})` })),
-        [activities],
+    const filteredCompletionActivities = useMemo(() => {
+        const needle = completionActivitySearch.trim().toLowerCase()
+        if (!needle) return activities.slice(0, 40)
+
+        return activities
+            .filter((item) => {
+                return (
+                    item.name.toLowerCase().includes(needle) ||
+                    item.code.toLowerCase().includes(needle) ||
+                    item.activityTypeCode.toLowerCase().includes(needle) ||
+                    (item.description || '').toLowerCase().includes(needle)
+                )
+            })
+            .slice(0, 40)
+    }, [activities, completionActivitySearch])
+
+    const selectedCompletionActivity = useMemo(
+        () => activities.find((item) => item.id === completionActivityId) || null,
+        [activities, completionActivityId],
+    )
+
+    const filteredReviewActivities = useMemo(() => {
+        const needle = reviewActivitySearch.trim().toLowerCase()
+        if (!needle) return activities.slice(0, 40)
+
+        return activities
+            .filter((item) => {
+                return (
+                    item.name.toLowerCase().includes(needle) ||
+                    item.code.toLowerCase().includes(needle) ||
+                    item.activityTypeCode.toLowerCase().includes(needle) ||
+                    (item.description || '').toLowerCase().includes(needle)
+                )
+            })
+            .slice(0, 40)
+    }, [activities, reviewActivitySearch])
+
+    const selectedReviewActivity = useMemo(
+        () => activities.find((item) => item.id === reviewActivityId) || null,
+        [activities, reviewActivityId],
     )
 
     const filteredActivities = useMemo(() => {
@@ -357,6 +398,21 @@ export function AdminPointsPage() {
             )
         })
     }, [activities, activitySearch])
+
+    const competitionActivities = useMemo(
+        () => filteredActivities.filter((item) => item.code.endsWith('_PARTICIPATION')),
+        [filteredActivities],
+    )
+
+    const regularActivities = useMemo(
+        () => filteredActivities.filter((item) => !item.code.endsWith('_PARTICIPATION')),
+        [filteredActivities],
+    )
+
+    const displayedActivities = useMemo(
+        () => (activeActivityManagementTab === 'competitions' ? competitionActivities : regularActivities),
+        [activeActivityManagementTab, competitionActivities, regularActivities],
+    )
 
     const selectedNewActivityKind = useMemo(
         () => activityKinds.find((kind) => kind.id === newActivityTypeId) || null,
@@ -656,7 +712,7 @@ export function AdminPointsPage() {
 
             {activeTab === 'participant-workflow' ? (
                 <div className="admin-layout">
-                    <aside className="card admin-left-panel stack">
+                    <aside className="admin-left-panel stack border-b border-[#2f2f39] pb-4">
                         <div className="section-head">
                             <h3>Participants</h3>
                             <p className="muted tiny">Search and select</p>
@@ -745,7 +801,9 @@ export function AdminPointsPage() {
                             </button>
                         </div>
 
-                        <article className={`card selected-participant-card ${selectedParticipant ? 'active' : ''}`}>
+                        <article
+                            className={`stack border-b pb-4 ${selectedParticipant ? 'border-[#ff2a2f]' : 'border-[#2f2f39]'}`}
+                        >
                             <div className="actions-row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
                                 <p className="tiny muted">Current Participant</p>
                                 <div className="actions-row">
@@ -771,7 +829,9 @@ export function AdminPointsPage() {
                         </article>
 
                         {activeParticipantWorkflowTab === 'participant-info' ? (
-                            <article className={`card selected-participant-card ${selectedParticipant ? 'active' : ''}`}>
+                            <article
+                                className={`stack border-b pb-4 ${selectedParticipant ? 'border-[#ff2a2f]' : 'border-[#2f2f39]'}`}
+                            >
                                 {participantDetail ? (
                                     <div className="data-list compact">
                                         <div>
@@ -802,7 +862,7 @@ export function AdminPointsPage() {
                         ) : null}
 
                         {activeParticipantWorkflowTab === 'competitions' ? (
-                            <article className="card admin-flow-card table-wrap table-scroll-y">
+                            <article className="admin-flow-card table-wrap table-scroll-y border-b border-[#2f2f39] pb-4">
                                 <h3>Participant Competitions</h3>
                                 <table>
                                     <thead>
@@ -841,33 +901,83 @@ export function AdminPointsPage() {
                         ) : null}
 
                         {activeParticipantWorkflowTab === 'mark-completion' ? (
-                            <article className="card admin-flow-card stack">
+                            <article className="admin-flow-card stack border-b border-[#2f2f39] pb-4">
                                 <h3>Mark Activity Completion</h3>
-                                <form className="grid two" onSubmit={onMarkCompletion}>
-                                    <select
-                                        value={completionActivityId}
-                                        onChange={(event) => setCompletionActivityId(event.target.value)}
-                                        required
-                                    >
-                                        <option value="">Select Activity</option>
-                                        {activityOptions.map((option) => (
-                                            <option key={option.value} value={option.value}>
-                                                {option.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <input
-                                        value={completionNote}
-                                        onChange={(event) => setCompletionNote(event.target.value)}
-                                        placeholder="Note (optional)"
-                                    />
-                                    <button type="submit" disabled={!selectedParticipantId || !completionActivityId}>
-                                        Mark Completion
-                                    </button>
-                                </form>
+                                <div className="grid gap-5 lg:grid-cols-[420px_minmax(0,1fr)] lg:items-start">
+                                    <section className="min-w-0 border border-[#2f2f39] bg-[#121218]">
+                                        <div className="border-b border-[#2f2f39] p-3">
+                                            <p className="text-[11px] uppercase tracking-[0.12em] text-[#b8b8c2]">Activity Selector</p>
+                                            <input
+                                                value={completionActivitySearch}
+                                                onChange={(event) => setCompletionActivitySearch(event.target.value)}
+                                                placeholder="Search activities by code, name, type, or description"
+                                                className="mt-2"
+                                            />
+                                        </div>
+
+                                        <div className="grid gap-2 p-2 lg:h-128 lg:overflow-y-auto">
+                                            {filteredCompletionActivities.map((item) => (
+                                                <button
+                                                    key={item.id}
+                                                    type="button"
+                                                    aria-pressed={completionActivityId === item.id}
+                                                    onClick={() => setCompletionActivityId(item.id)}
+                                                    className={`relative min-w-0 rounded-md border px-3 py-2.5 text-left transition ${
+                                                        completionActivityId === item.id
+                                                            ? 'border-[#ff2a2f] bg-[#231317]'
+                                                            : 'border-[#33333d] bg-[#17171d] hover:border-[#ff2a2f]/60'
+                                                    }`}
+                                                >
+                                                    {completionActivityId === item.id ? (
+                                                        <span className="absolute right-2 top-2 text-[10px] font-bold uppercase tracking-widest text-[#ff7d80]">
+                                                            Selected
+                                                        </span>
+                                                    ) : null}
+                                                    <p className="pr-16 text-sm font-semibold leading-snug text-white line-clamp-2">{item.name}</p>
+                                                    <p className="mt-1 text-xs leading-snug text-[#b8b8c2] truncate">
+                                                        {item.code} | {item.activityTypeCode}
+                                                    </p>
+                                                </button>
+                                            ))}
+                                            {!filteredCompletionActivities.length ? (
+                                                <p className="p-2 text-xs text-[#b8b8c2]">No activities match this search.</p>
+                                            ) : null}
+                                        </div>
+                                    </section>
+
+                                    <section className="min-w-0 stack self-start">
+                                        <div className="border border-dashed border-[#3a3a44] p-3">
+                                            <p className="tiny muted" style={{ marginBottom: 4 }}>
+                                                Selected activity
+                                            </p>
+                                            {selectedCompletionActivity ? (
+                                                <p>
+                                                    <strong>{selectedCompletionActivity.name}</strong>
+                                                    <br />
+                                                    <span className="tiny muted">
+                                                        {selectedCompletionActivity.code} ({selectedCompletionActivity.activityTypeCode})
+                                                    </span>
+                                                </p>
+                                            ) : (
+                                                <p className="tiny muted">Choose an activity from the left column.</p>
+                                            )}
+                                        </div>
+
+                                        <form className="grid two" onSubmit={onMarkCompletion}>
+                                            <input
+                                                value={completionNote}
+                                                onChange={(event) => setCompletionNote(event.target.value)}
+                                                placeholder="Note (optional)"
+                                            />
+                                            <button type="submit" disabled={!selectedParticipantId || !completionActivityId}>
+                                                Mark Completion
+                                            </button>
+                                        </form>
+                                    </section>
+                                </div>
 
                                 {completionActivityId ? (
-                                    <div className="card" style={{ margin: 0 }}>
+                                    <div className="stack border border-dashed border-[#3a3a44] p-3" style={{ margin: 0 }}>
                                         <div className="section-head">
                                             <h4>Latest Submission Evidence</h4>
                                             {completionSubmissionEvidenceLoading ? <span className="tiny muted">Loading...</span> : null}
@@ -928,7 +1038,7 @@ export function AdminPointsPage() {
                         ) : null}
 
                         {activeParticipantWorkflowTab === 'adjust-points' ? (
-                            <article className="card admin-flow-card stack">
+                            <article className="admin-flow-card stack border-b border-[#2f2f39] pb-4">
                                 <h3>Adjust Points</h3>
                                 <form className="grid two" onSubmit={onAdjustPoints}>
                                     <input
@@ -953,7 +1063,7 @@ export function AdminPointsPage() {
                         ) : null}
 
                         {activeParticipantWorkflowTab === 'submissions' ? (
-                            <article className="card admin-flow-card table-wrap table-scroll-y">
+                            <article className="admin-flow-card table-wrap table-scroll-y border-b border-[#2f2f39] pb-4">
                                 <h3>Pending Submissions</h3>
                                 <table>
                                     <thead>
@@ -1013,7 +1123,7 @@ export function AdminPointsPage() {
                         ) : null}
 
                         {activeParticipantWorkflowTab === 'completed-activities' ? (
-                            <article className="card admin-flow-card table-wrap table-scroll-y">
+                            <article className="admin-flow-card table-wrap table-scroll-y border-b border-[#2f2f39] pb-4">
                                 <h3>Completed Activities</h3>
                                 <table>
                                     <thead>
@@ -1098,61 +1208,91 @@ export function AdminPointsPage() {
                         <div className="stack">
                             {activeActivitiesTab === 'activity-management' ? (
                                 <>
-                                    <article className="card admin-flow-card stack">
-                                        <h3>Create Activity</h3>
-                                        <form className="grid two" onSubmit={onCreateActivity}>
-                                            <input
-                                                value={newActivityName}
-                                                onChange={(event) => setNewActivityName(event.target.value)}
-                                                placeholder="Name"
-                                                required
-                                            />
-                                            <div className="card" style={{ margin: 0, padding: 10 }}>
-                                                <p className="tiny muted" style={{ marginBottom: 4 }}>
-                                                    Code preview (auto-generated)
-                                                </p>
-                                                <strong>{newActivityCodePreview}</strong>
-                                            </div>
-                                            <select
-                                                value={newActivityTypeId}
-                                                onChange={(event) => setNewActivityTypeId(event.target.value)}
-                                                required
-                                            >
-                                                <option value="">Select Activity Type</option>
-                                                {activityKinds.map((kind) => (
-                                                    <option key={kind.id} value={kind.id}>
-                                                        {kind.name} ({kind.code})
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            <input
-                                                type="number"
-                                                min={1}
-                                                max={1000}
-                                                value={newActivityPoints}
-                                                onChange={(event) => setNewActivityPoints(event.target.value)}
-                                                placeholder="Points"
-                                                required
-                                            />
-                                            <input
-                                                value={newActivityDescription}
-                                                onChange={(event) => setNewActivityDescription(event.target.value)}
-                                                placeholder="Description (optional)"
-                                            />
-                                            {selectedNewActivityKind?.code === 'CORRECT_ANSWER' ? (
+                                    {activeActivityManagementTab === 'activities' ? (
+                                        <article className="admin-flow-card stack border-b border-[#2f2f39] pb-4">
+                                            <h3>Create Activity</h3>
+                                            <form className="grid two" onSubmit={onCreateActivity}>
                                                 <input
-                                                    value={newActivityCorrectAnswer}
-                                                    onChange={(event) => setNewActivityCorrectAnswer(event.target.value)}
-                                                    placeholder="Canonical correct answer"
+                                                    value={newActivityName}
+                                                    onChange={(event) => setNewActivityName(event.target.value)}
+                                                    placeholder="Name"
                                                     required
                                                 />
-                                            ) : null}
-                                            <button type="submit">Create Activity</button>
-                                        </form>
-                                    </article>
+                                                <div className="border border-dashed border-[#3a3a44] p-2.5" style={{ margin: 0 }}>
+                                                    <p className="tiny muted" style={{ marginBottom: 4 }}>
+                                                        Code preview (auto-generated)
+                                                    </p>
+                                                    <strong>{newActivityCodePreview}</strong>
+                                                </div>
+                                                <select
+                                                    value={newActivityTypeId}
+                                                    onChange={(event) => setNewActivityTypeId(event.target.value)}
+                                                    required
+                                                >
+                                                    <option value="">Select Activity Type</option>
+                                                    {activityKinds.map((kind) => (
+                                                        <option key={kind.id} value={kind.id}>
+                                                            {kind.name} ({kind.code})
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                <input
+                                                    type="number"
+                                                    min={1}
+                                                    max={1000}
+                                                    value={newActivityPoints}
+                                                    onChange={(event) => setNewActivityPoints(event.target.value)}
+                                                    placeholder="Points"
+                                                    required
+                                                />
+                                                <input
+                                                    value={newActivityDescription}
+                                                    onChange={(event) => setNewActivityDescription(event.target.value)}
+                                                    placeholder="Description (optional)"
+                                                />
+                                                {selectedNewActivityKind?.code === 'CORRECT_ANSWER' ? (
+                                                    <input
+                                                        value={newActivityCorrectAnswer}
+                                                        onChange={(event) => setNewActivityCorrectAnswer(event.target.value)}
+                                                        placeholder="Canonical correct answer"
+                                                        required
+                                                    />
+                                                ) : null}
+                                                <button type="submit">Create Activity</button>
+                                            </form>
+                                        </article>
+                                    ) : (
+                                        <article className="admin-flow-card stack border-b border-[#2f2f39] pb-4">
+                                            <h3>Competition Activities</h3>
+                                            <p className="muted tiny">
+                                                These are auto-generated participation activities (codes ending with _PARTICIPATION).
+                                            </p>
+                                        </article>
+                                    )}
 
-                                    <article className="card table-wrap table-scroll-y admin-flow-card">
-                                        <h3>Activities</h3>
+                                    <div className="admin-subtabs admin-inner-subtabs" role="tablist" aria-label="Activity management sections">
+                                        <button
+                                            type="button"
+                                            role="tab"
+                                            aria-selected={activeActivityManagementTab === 'competitions'}
+                                            className={`admin-subtab ${activeActivityManagementTab === 'competitions' ? 'active' : ''}`}
+                                            onClick={() => setActiveActivityManagementTab('competitions')}
+                                        >
+                                            Competitions ({competitionActivities.length})
+                                        </button>
+                                        <button
+                                            type="button"
+                                            role="tab"
+                                            aria-selected={activeActivityManagementTab === 'activities'}
+                                            className={`admin-subtab ${activeActivityManagementTab === 'activities' ? 'active' : ''}`}
+                                            onClick={() => setActiveActivityManagementTab('activities')}
+                                        >
+                                            Activities ({regularActivities.length})
+                                        </button>
+                                    </div>
+
+                                    <article className="table-wrap table-scroll-y admin-flow-card border-b border-[#2f2f39] pb-4">
+                                        <h3>{activeActivityManagementTab === 'competitions' ? 'Competition Activities' : 'Activities'}</h3>
                                         <input
                                             value={activitySearch}
                                             onChange={(event) => setActivitySearch(event.target.value)}
@@ -1171,7 +1311,7 @@ export function AdminPointsPage() {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {filteredActivities.map((item) => (
+                                                {displayedActivities.map((item) => (
                                                     <tr key={item.id}>
                                                         <td>{item.code}</td>
                                                         <td>
@@ -1253,10 +1393,12 @@ export function AdminPointsPage() {
                                                         </td>
                                                     </tr>
                                                 ))}
-                                                {!filteredActivities.length ? (
+                                                {!displayedActivities.length ? (
                                                     <tr>
                                                         <td colSpan={7} className="muted">
-                                                            No activities match this search.
+                                                            {activeActivityManagementTab === 'competitions'
+                                                                ? 'No competition activities match this search.'
+                                                                : 'No activities match this search.'}
                                                         </td>
                                                     </tr>
                                                 ) : null}
@@ -1267,109 +1409,166 @@ export function AdminPointsPage() {
                             ) : null}
 
                             {activeActivitiesTab === 'review-submissions' ? (
-                                <article className="card table-wrap table-scroll-y admin-flow-card stack">
+                                <article className="admin-flow-card stack border-b border-[#2f2f39] pb-4">
                                     <h3>Submissions By Activity</h3>
-                                    <div className="grid two" style={{ alignItems: 'end' }}>
-                                        <select value={reviewActivityId} onChange={(event) => setReviewActivityId(event.target.value)}>
-                                            <option value="">Select Activity</option>
-                                            {activityOptions.map((option) => (
-                                                <option key={option.value} value={option.value}>
-                                                    {option.label}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <select
-                                            value={reviewStatusFilter}
-                                            onChange={(event) =>
-                                                setReviewStatusFilter(event.target.value as 'PENDING' | 'APPROVED' | 'REJECTED' | '')
-                                            }
-                                        >
-                                            <option value="">All Statuses</option>
-                                            <option value="PENDING">Pending</option>
-                                            <option value="APPROVED">Approved</option>
-                                            <option value="REJECTED">Rejected</option>
-                                        </select>
-                                    </div>
+                                    <div className="grid gap-5 lg:grid-cols-[420px_minmax(0,1fr)]">
+                                        <section className="min-w-0 border border-[#2f2f39] bg-[#121218]">
+                                            <div className="border-b border-[#2f2f39] p-3">
+                                                <p className="text-[11px] uppercase tracking-[0.12em] text-[#b8b8c2]">Activity Selector</p>
+                                                <input
+                                                    value={reviewActivitySearch}
+                                                    onChange={(event) => setReviewActivitySearch(event.target.value)}
+                                                    placeholder="Search activities by code, name, type, or description"
+                                                    className="mt-2"
+                                                />
+                                            </div>
 
-                                    {!reviewActivityId ? (
-                                        <p className="muted">Select an activity to review its submissions.</p>
-                                    ) : (
-                                        <table>
-                                            <thead>
-                                                <tr>
-                                                    <th>Participant</th>
-                                                    <th>Submission</th>
-                                                    <th>Status</th>
-                                                    <th>Submitted At</th>
-                                                    <th>Review Note</th>
-                                                    <th>Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {activitySubmissions.map((submission) => (
-                                                    <tr key={submission.id}>
-                                                        <td>
-                                                            <strong>{submission.fullName || submission.participantId}</strong>
-                                                            <div className="tiny muted">{submission.institution || submission.email || '-'}</div>
-                                                        </td>
-                                                        <td>
-                                                            {submission.submissionLink ? (
-                                                                <a href={submission.submissionLink} target="_blank" rel="noreferrer">
-                                                                    Open Link
-                                                                </a>
-                                                            ) : (
-                                                                submission.submissionText || '-'
-                                                            )}
-                                                        </td>
-                                                        <td>{submission.status}</td>
-                                                        <td>{new Date(submission.submittedAt).toLocaleString()}</td>
-                                                        <td>
-                                                            <input
-                                                                value={submissionNotes[submission.id] || submission.reviewNote || ''}
-                                                                onChange={(event) =>
-                                                                    setSubmissionNotes((prev) => ({ ...prev, [submission.id]: event.target.value }))
-                                                                }
-                                                                placeholder="Review note"
-                                                            />
-                                                        </td>
-                                                        <td>
-                                                            <div className="actions-row">
-                                                                <button
-                                                                    type="button"
-                                                                    disabled={submission.status === 'APPROVED'}
-                                                                    onClick={() => onApproveSubmission(submission)}
-                                                                >
-                                                                    Approve
-                                                                </button>
-                                                                <button
-                                                                    type="button"
-                                                                    className="outline-button"
-                                                                    disabled={submission.status === 'REJECTED'}
-                                                                    onClick={() => onRejectSubmission(submission)}
-                                                                >
-                                                                    Reject
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
+                                            <div className="grid gap-2 p-2 lg:h-128 lg:overflow-y-auto">
+                                                {filteredReviewActivities.map((item) => (
+                                                    <button
+                                                        key={item.id}
+                                                        type="button"
+                                                        aria-pressed={reviewActivityId === item.id}
+                                                        onClick={() => setReviewActivityId(item.id)}
+                                                        className={`relative min-w-0 rounded-md border px-3 py-2.5 text-left transition ${
+                                                            reviewActivityId === item.id
+                                                                ? 'border-[#ff2a2f] bg-[#231317]'
+                                                                : 'border-[#33333d] bg-[#17171d] hover:border-[#ff2a2f]/60'
+                                                        }`}
+                                                    >
+                                                        {reviewActivityId === item.id ? (
+                                                            <span className="absolute right-2 top-2 text-[10px] font-bold uppercase tracking-widest text-[#ff7d80]">
+                                                                Selected
+                                                            </span>
+                                                        ) : null}
+                                                        <p className="pr-16 text-sm font-semibold leading-snug text-white line-clamp-2">{item.name}</p>
+                                                        <p className="mt-1 text-xs leading-snug text-[#b8b8c2] truncate">
+                                                            {item.code} | {item.activityTypeCode}
+                                                        </p>
+                                                    </button>
                                                 ))}
-                                                {!activitySubmissions.length ? (
-                                                    <tr>
-                                                        <td colSpan={6} className="muted">
-                                                            {activitySubmissionsLoading
-                                                                ? 'Loading submissions...'
-                                                                : 'No submissions match this activity and status.'}
-                                                        </td>
-                                                    </tr>
+                                                {!filteredReviewActivities.length ? (
+                                                    <p className="p-2 text-xs text-[#b8b8c2]">No activities match this search.</p>
                                                 ) : null}
-                                            </tbody>
-                                        </table>
-                                    )}
+                                            </div>
+                                        </section>
+
+                                        <section className="min-w-0 border border-[#2f2f39] bg-[#121218]">
+                                            <div className="flex flex-wrap items-end gap-3 border-b border-[#2f2f39] p-3">
+                                                <div className="min-w-64 flex-1">
+                                                    <p className="text-[11px] uppercase tracking-[0.12em] text-[#b8b8c2]">Selected Activity</p>
+                                                    {selectedReviewActivity ? (
+                                                        <p className="mt-1 text-sm text-white">
+                                                            <strong>{selectedReviewActivity.name}</strong>
+                                                            <br />
+                                                            <span className="text-xs text-[#b8b8c2]">
+                                                                {selectedReviewActivity.code} ({selectedReviewActivity.activityTypeCode})
+                                                            </span>
+                                                        </p>
+                                                    ) : (
+                                                        <p className="mt-1 text-xs text-[#b8b8c2]">Choose an activity from the left column.</p>
+                                                    )}
+                                                </div>
+
+                                                <div className="min-w-48">
+                                                    <label className="tiny muted">Status Filter</label>
+                                                    <select
+                                                        value={reviewStatusFilter}
+                                                        onChange={(event) =>
+                                                            setReviewStatusFilter(event.target.value as 'PENDING' | 'APPROVED' | 'REJECTED' | '')
+                                                        }
+                                                    >
+                                                        <option value="">All Statuses</option>
+                                                        <option value="PENDING">Pending</option>
+                                                        <option value="APPROVED">Approved</option>
+                                                        <option value="REJECTED">Rejected</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            {!reviewActivityId ? (
+                                                <p className="p-3 text-sm text-[#b8b8c2]">Select an activity to review its submissions.</p>
+                                            ) : (
+                                                <div className="table-wrap lg:h-128 lg:overflow-y-auto">
+                                                    <table>
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Participant</th>
+                                                                <th>Submission</th>
+                                                                <th>Status</th>
+                                                                <th>Submitted At</th>
+                                                                <th>Review Note</th>
+                                                                <th>Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {activitySubmissions.map((submission) => (
+                                                                <tr key={submission.id}>
+                                                                    <td>
+                                                                        <strong>{submission.fullName || submission.participantId}</strong>
+                                                                        <div className="tiny muted">{submission.institution || submission.email || '-'}</div>
+                                                                    </td>
+                                                                    <td>
+                                                                        {submission.submissionLink ? (
+                                                                            <a href={submission.submissionLink} target="_blank" rel="noreferrer">
+                                                                                Open Link
+                                                                            </a>
+                                                                        ) : (
+                                                                            submission.submissionText || '-'
+                                                                        )}
+                                                                    </td>
+                                                                    <td>{submission.status}</td>
+                                                                    <td>{new Date(submission.submittedAt).toLocaleString()}</td>
+                                                                    <td>
+                                                                        <input
+                                                                            value={submissionNotes[submission.id] || submission.reviewNote || ''}
+                                                                            onChange={(event) =>
+                                                                                setSubmissionNotes((prev) => ({ ...prev, [submission.id]: event.target.value }))
+                                                                            }
+                                                                            placeholder="Review note"
+                                                                        />
+                                                                    </td>
+                                                                    <td>
+                                                                        <div className="actions-row">
+                                                                            <button
+                                                                                type="button"
+                                                                                disabled={submission.status === 'APPROVED'}
+                                                                                onClick={() => onApproveSubmission(submission)}
+                                                                            >
+                                                                                Approve
+                                                                            </button>
+                                                                            <button
+                                                                                type="button"
+                                                                                className="outline-button"
+                                                                                disabled={submission.status === 'REJECTED'}
+                                                                                onClick={() => onRejectSubmission(submission)}
+                                                                            >
+                                                                                Reject
+                                                                            </button>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                            {!activitySubmissions.length ? (
+                                                                <tr>
+                                                                    <td colSpan={6} className="muted">
+                                                                        {activitySubmissionsLoading
+                                                                            ? 'Loading submissions...'
+                                                                            : 'No submissions match this activity and status.'}
+                                                                    </td>
+                                                                </tr>
+                                                            ) : null}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            )}
+                                        </section>
+                                    </div>
                                 </article>
                             ) : null}
 
                             {activeActivitiesTab === 'points-config' ? (
-                                <article className="card table-wrap table-scroll-y admin-flow-card stack">
+                                <article className="table-wrap table-scroll-y admin-flow-card stack border-b border-[#2f2f39] pb-4">
                                     <h3>Competition Activity Points Configuration</h3>
                                     <p className="muted tiny">
                                         These values are consumed by automated jobs that create and update competition participation activities.
@@ -1469,7 +1668,7 @@ export function AdminPointsPage() {
 
             {activeTab === 'audit' ? (
                 <div className="stack admin-layout-single">
-                    <article className="card table-wrap table-scroll-y admin-flow-card">
+                    <article className="table-wrap table-scroll-y admin-flow-card border-b border-[#2f2f39] pb-4">
                         <h3>Recent Audit Logs</h3>
                         <table>
                             <thead>

@@ -514,6 +514,132 @@
         align-content: start;
     }
 
+    .dashboard-editorial .dashboard-hero {
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+        margin: 0;
+        padding: 0.9rem 0 1.3rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .dashboard-editorial .dashboard-hero-head {
+        gap: 1rem;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: end;
+    }
+
+    .dashboard-editorial .dashboard-hero-copy {
+        gap: 0.5rem;
+        text-align: left;
+    }
+
+    .dashboard-editorial .dashboard-hero-eyebrow {
+        margin: 0;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: red;
+        font-family: 'Space Mono', monospace;
+    }
+
+    .dashboard-editorial .dashboard-hero-copy .main-heading {
+        margin: 0;
+        line-height: 0.94;
+    }
+
+    .dashboard-editorial .dashboard-hero-title {
+        font-size: clamp(2rem, 4.3vw, 3.2rem);
+        letter-spacing: 0.01em;
+    }
+
+    .dashboard-editorial .dashboard-hero-name {
+        color: #ffffff;
+    }
+
+    .dashboard-editorial .dashboard-hero-subtitle {
+        margin-top: 0;
+        max-width: 58ch;
+        font-size: 0.95rem;
+        color: #b8b8c2;
+    }
+
+    .dashboard-editorial .dashboard-hero-download {
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        background: transparent;
+        box-shadow: none;
+        padding: 0.52rem 0.95rem;
+        width: auto;
+        color: #d8d8de;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.72rem;
+        white-space: nowrap;
+    }
+
+    .dashboard-editorial .dashboard-hero-download:hover {
+        color: #ffffff;
+        border-color: rgba(255, 42, 47, 0.85);
+        background: rgba(255, 42, 47, 0.08);
+        transform: translateY(-1px);
+    }
+
+    .dashboard-editorial .dashboard-hero-download svg {
+        opacity: 0.9;
+    }
+
+    .dashboard-editorial .dashboard-export-frame {
+        border: 0;
+        background: transparent;
+        padding: 0.35rem clamp(14px, 2.6vw, 30px) 0.2rem;
+        gap: 1.45rem;
+    }
+
+    .dashboard-editorial .dashboard-panel {
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+        padding: 0;
+    }
+
+    .dashboard-editorial .profile-panel {
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        padding-right: 1rem;
+    }
+
+    .dashboard-editorial .profile-line {
+        padding: 0.65rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .dashboard-editorial .profile-line:last-child {
+        border-bottom: 0;
+    }
+
+    .dashboard-editorial .mission-stream {
+        padding-left: 1.2rem;
+        padding-right: 0.35rem;
+    }
+
+    .dashboard-editorial .mission-stream-list {
+        gap: 0;
+    }
+
+    .dashboard-editorial .mission-stream-row {
+        border: 0;
+        background: transparent;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1.1rem 0;
+    }
+
+    .dashboard-editorial .mission-stream-row:first-child {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .dashboard-editorial .mission-stream-row:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
     .mission-stream-list {
         @apply grid gap-2;
     }
@@ -758,6 +884,38 @@
 
         .participant-main-grid {
             grid-template-columns: 1fr;
+        }
+
+        .dashboard-editorial .profile-panel {
+            border-right: 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-right: 0;
+            padding-bottom: 1.2rem;
+        }
+
+        .dashboard-editorial .mission-stream {
+            padding-left: 0;
+            padding-right: 0;
+            padding-top: 0.8rem;
+        }
+
+        .dashboard-editorial .dashboard-hero-head {
+            grid-template-columns: 1fr;
+            align-items: start;
+        }
+
+        .dashboard-editorial .dashboard-hero-title {
+            font-size: clamp(1.7rem, 9vw, 2.35rem);
+            line-height: 1.02;
+        }
+
+        .dashboard-editorial .dashboard-hero-download {
+            justify-content: flex-start;
+            padding: 0.5rem 0.85rem;
+        }
+
+        .dashboard-editorial .dashboard-export-frame {
+            padding-inline: clamp(14px, 4vw, 22px);
         }
 
         .mission-stream-row {

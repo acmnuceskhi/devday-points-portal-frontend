@@ -21,7 +21,7 @@ export function PointsPage() {
     const [submissionLinks, setSubmissionLinks] = useState<Record<string, string>>({})
     const [submissionTexts, setSubmissionTexts] = useState<Record<string, string>>({})
     const [activitySearch, setActivitySearch] = useState('')
-    const [activeObjectiveTab, setActiveObjectiveTab] = useState<'main' | 'side'>('main')
+    const [activeObjectiveTab, setActiveObjectiveTab] = useState<'main' | 'side'>('side')
     const [showCompletedMainOnly, setShowCompletedMainOnly] = useState(true)
     const [submittingActivityId, setSubmittingActivityId] = useState<string | null>(null)
     const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null)
@@ -172,70 +172,75 @@ export function PointsPage() {
     }
 
     return (
-        <section className="dashboard-shell stack">
-            <section className="dashboard-metrics-strip" aria-label="Points metrics">
-                <article className="metric-block">
-                    <p>Total Points</p>
-                    <strong>{summary?.totalPoints ?? 0}</strong>
+        <section className="dashboard-shell stack px-5 md:px-0">
+            <section className="space-y-2 border-b border-[#2a2a34] pb-4">
+                <p className="text-[11px] uppercase tracking-[0.16em] text-[#b8b8c2]">Progress Center</p>
+                <h2 className="text-2xl font-bold leading-tight text-white md:text-3xl">Points and Activities</h2>
+                <p className="text-sm text-[#a9a9b4]">Track your competition participation and activity progress in one place.</p>
+            </section>
+
+            <section className="grid grid-cols-[1.4fr_1fr] gap-3 border-b border-[#2f2f38] pb-4" aria-label="Points metrics">
+                <article>
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-[#b8b8c2]">Total Points</p>
+                    <strong className="mt-1 block text-[2.1rem] leading-none text-[#ff2a2f] md:text-[2.5rem]">{summary?.totalPoints ?? 0}</strong>
+                    <p className="mt-1 text-xs text-[#a9a9b4]">Overall score across all tracked activities.</p>
                 </article>
-                <article className="metric-block">
-                    <p>Activities Completed</p>
-                    <strong>{sideMissionCompletedCount}</strong>
+
+                <article className="text-right">
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-[#b8b8c2]">Activities</p>
+                    <strong className="mt-1 block text-[1.5rem] leading-none text-white md:text-[1.8rem]">{sideMissionCompletedCount}</strong>
+                    <p className="mt-1 text-xs text-[#a9a9b4]">Completed</p>
                 </article>
             </section>
 
-            <section className="dashboard-panel stack">
-                <div className="section-head objective-console-head">
-                    <h3 className="section-heading">Activities</h3>
-                    <input
-                        value={activitySearch}
-                        onChange={(event) => setActivitySearch(event.target.value)}
-                        placeholder="Search activities"
-                        style={{ maxWidth: 280 }}
-                    />
-                </div>
+            <section className="stack pt-2">
+                <div className="space-y-3">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <div className="w-full md:max-w-2xl md:flex-1">
+                            <input
+                                value={activitySearch}
+                                onChange={(event) => setActivitySearch(event.target.value)}
+                                placeholder="Search competitions and activities"
+                                className="w-full rounded-md border border-[#383844] bg-transparent px-4 py-3 text-sm text-white placeholder:text-[#8f8f9a] focus:border-[#ff2a2f] focus:outline-none"
+                            />
+                        </div>
 
-                <div className="stack">
-                    <div className="section-head">
-                        <div className="objective-tabs" role="tablist" aria-label="Objective categories">
+                        <div className="grid w-full grid-cols-2 gap-2 rounded-lg border border-[#2f2f39] bg-[#0f0f13] p-1.5 md:w-105 md:shrink-0" role="tablist" aria-label="Activity categories">
                             <button
                                 type="button"
-                                className={activeObjectiveTab === 'main' ? 'objective-tab active' : 'objective-tab'}
+                                className={`rounded-md px-3 py-2 text-xs font-bold uppercase tracking-widest transition ${activeObjectiveTab === 'main'
+                                    ? 'bg-[#ff2a2f] text-white shadow-lg shadow-[#ff2a2f]/25'
+                                    : 'text-[#c5c5cf] bg-[#26262e] hover:text-white'
+                                    }`}
                                 role="tab"
                                 aria-selected={activeObjectiveTab === 'main'}
                                 onClick={() => setActiveObjectiveTab('main')}
                             >
-                                Main Activities ({mainObjectives.length})
+                                Competitions ({mainObjectives.length})
                             </button>
                             <button
                                 type="button"
-                                className={activeObjectiveTab === 'side' ? 'objective-tab active' : 'objective-tab'}
+                                className={`rounded-md px-3 py-2 text-xs font-bold uppercase tracking-widest transition ${activeObjectiveTab === 'side'
+                                    ? 'bg-[#ff2a2f] text-white shadow-lg shadow-[#ff2a2f]/25'
+                                    : 'text-[#c5c5cf] bg-[#26262e] hover:text-white'
+                                    }`}
                                 role="tab"
                                 aria-selected={activeObjectiveTab === 'side'}
                                 onClick={() => setActiveObjectiveTab('side')}
                             >
-                                Side Activities ({sideObjectives.length})
+                                Activities ({sideObjectives.length})
                             </button>
                         </div>
-                        <label className="objective-mobile-filter" htmlFor="objective-category-select">
-                            <span className="tiny muted">Activity Category</span>
-                            <select
-                                id="objective-category-select"
-                                value={activeObjectiveTab}
-                                onChange={(event) =>
-                                    setActiveObjectiveTab(event.target.value === 'main' ? 'main' : 'side')
-                                }
-                            >
-                                <option value="main">Main Activities ({mainObjectives.length})</option>
-                                <option value="side">Side Activities ({sideObjectives.length})</option>
-                            </select>
-                        </label>
-                        <p className="muted tiny">
-                            {activeObjectiveTab === 'main'
-                                ? 'Core competition participation checkpoints.'
-                                : 'Optional and bonus activities.'}
-                        </p>
                     </div>
+
+                    <p className="text-center text-xs text-[#a9a9b4] md:text-left">
+                        {activeObjectiveTab === 'main'
+                            ? 'Core competition participation checkpoints.'
+                            : 'Optional and bonus activities.'}
+                    </p>
+                </div>
+
+                <div className="stack">
 
                     {activeObjectiveTab === 'main' ? (
                         <label className="toggle-row">
@@ -244,12 +249,12 @@ export function PointsPage() {
                                 checked={showCompletedMainOnly}
                                 onChange={(event) => setShowCompletedMainOnly(event.target.checked)}
                             />
-                            Completed main activities only
+                            Participated competitions only
                         </label>
                     ) : null}
 
                     {activeObjectiveTab === 'main' ? (
-                        <div className="objective-grid">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 auto-rows-fr">
                             {displayedMainObjectives.map((item) => {
                                 const statusLabel = item.isCompleted
                                     ? 'Completed'
@@ -260,29 +265,35 @@ export function PointsPage() {
                                             : 'Inactive'
 
                                 return (
-                                    <article key={item.id} className="objective-row points-objective-row">
-                                        <div>
+                                    <article
+                                        key={item.id}
+                                        className="relative flex min-h-55 flex-col justify-between overflow-hidden rounded-lg border border-[#343441] bg-transparent p-4 transition hover:border-[#4a83a7]"
+                                    >
+                                        <div className="pr-3">
                                             <p className="stream-title">{item.name}</p>
                                             <p className="objective-meta">{item.description || 'No description provided.'}</p>
                                         </div>
-                                        <div>
-                                            <p className="objective-meta">Points: {item.points}</p>
-                                            <span className={`competition-status-pill ${item.isCompleted ? 'is-verified' : ''}`}>
-                                                {statusLabel}
-                                            </span>
+                                        <div className="mt-4 flex items-end justify-between gap-3">
+                                            <div className="space-y-1">
+                                                <p className="objective-meta">Points: {item.points}</p>
+                                                <span className={`competition-status-pill ${item.isCompleted ? 'is-verified' : ''}`}>
+                                                    {statusLabel}
+                                                </span>
+                                            </div>
+                                            <button type="button" className="outline-button" onClick={() => openActivityDialog(item.id)}>
+                                                Details
+                                            </button>
                                         </div>
-                                        <button type="button" className="outline-button" onClick={() => openActivityDialog(item.id)}>
-                                            Details
-                                        </button>
+                                        <span className="pointer-events-none absolute right-0 top-3 h-[calc(100%-1.5rem)] w-0.75 rounded-full bg-[#5ea9d6]" aria-hidden="true" />
                                     </article>
                                 )
                             })}
-                            {!displayedMainObjectives.length ? <p className="muted">No completed main activities match your current filter.</p> : null}
+                            {!displayedMainObjectives.length ? <p className="muted">No competitions.</p> : null}
                         </div>
                     ) : null}
 
                     {activeObjectiveTab === 'side' ? (
-                        <div className="objective-grid">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 auto-rows-fr">
                             {sideObjectives.map((item) => {
                                 const statusLabel = item.isCompleted
                                     ? 'Completed'
@@ -293,20 +304,26 @@ export function PointsPage() {
                                             : 'Inactive'
 
                                 return (
-                                    <article key={item.id} className="objective-row points-objective-row">
-                                        <div>
+                                    <article
+                                        key={item.id}
+                                        className="relative flex min-h-55 flex-col justify-between overflow-hidden rounded-lg border border-[#343441] bg-transparent p-4 transition hover:border-[#4a9773]"
+                                    >
+                                        <div className="pr-3">
                                             <p className="stream-title">{item.name}</p>
                                             <p className="objective-meta">{item.description || 'No description provided.'}</p>
                                         </div>
-                                        <div>
-                                            <p className="objective-meta">Points: {item.points}</p>
-                                            <span className={`competition-status-pill ${item.isCompleted ? 'is-verified' : ''}`}>
-                                                {statusLabel}
-                                            </span>
+                                        <div className="mt-4 flex items-end justify-between gap-3">
+                                            <div className="space-y-1">
+                                                <p className="objective-meta">Points: {item.points}</p>
+                                                <span className={`competition-status-pill ${item.isCompleted ? 'is-verified' : ''}`}>
+                                                    {statusLabel}
+                                                </span>
+                                            </div>
+                                            <button type="button" className="outline-button" onClick={() => openActivityDialog(item.id)}>
+                                                Details
+                                            </button>
                                         </div>
-                                        <button type="button" className="outline-button" onClick={() => openActivityDialog(item.id)}>
-                                            Details
-                                        </button>
+                                        <span className="pointer-events-none absolute right-0 top-3 h-[calc(100%-1.5rem)] w-0.75 rounded-full bg-[#63c799]" aria-hidden="true" />
                                     </article>
                                 )
                             })}

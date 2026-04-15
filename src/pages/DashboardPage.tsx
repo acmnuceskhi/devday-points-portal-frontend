@@ -44,7 +44,7 @@ export function DashboardPage() {
     try {
       setExportError('');
       setExporting(true);
-      await exportElementAsImage('dashboard-sim-export', 'simulation-dashboard');
+      await exportElementAsImage('dashboard-snapshot-template', 'simulation-dashboard');
     } catch (error) {
       setExportError(error instanceof Error ? error.message : 'Could not export dashboard image.');
     } finally {
@@ -87,7 +87,7 @@ export function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 dashboard-editorial">
       <DashboardHero
         participantName={firstName}
         onDownloadSnapshot={() => void onExport()}
@@ -96,13 +96,13 @@ export function DashboardPage() {
 
       {exportError ? <div className="error-banner">{exportError}</div> : null}
 
-      <div id="dashboard-sim-export" className="dashboard-export-frame">
+      <div className="dashboard-export-frame">
         <div className="participant-main-grid">
           <aside className="dashboard-panel profile-panel">
             <h3 className="section-heading">Your Profile</h3>
             <dl className="space-y-3">
               {profileDetails.map((detail) => (
-                <div key={detail.label} className="flex items-center justify-between gap-4">
+                <div key={detail.label} className="profile-line flex items-center justify-between gap-4">
                   <dt className="text-sm font-semibold text-[#ff2a2f]">{detail.label}</dt>
                   <dd className="text-white text-right">{detail.value || '-'}</dd>
                 </div>
@@ -161,6 +161,127 @@ export function DashboardPage() {
           onClose={closeTeamModal}
         />
       ) : null}
+
+      <div
+        id="dashboard-snapshot-template"
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          zIndex: -1,
+          opacity: 0,
+          pointerEvents: 'none',
+          width: '760px',
+          padding: '26px',
+          color: '#f8f8fb',
+          background: 'linear-gradient(170deg, #0e0e13 0%, #09090d 55%, #12090a 100%)',
+          fontFamily: 'Space Mono, monospace',
+          boxSizing: 'border-box',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
+            paddingBottom: '16px',
+            marginBottom: '16px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <img src="/devday-logo.png" alt="DevDay logo" style={{ width: '44px', height: '60px', objectFit: 'contain' }} />
+            <div>
+              <p style={{ margin: 0, fontSize: '11px', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#b9b9c4' }}>
+                DevDay 2026
+              </p>
+              <h2 style={{ margin: '4px 0 0', fontSize: '24px', lineHeight: 1.1 }}>Participant Snapshot</h2>
+            </div>
+          </div>
+          <p style={{ margin: 0, fontSize: '12px', color: '#b9b9c4' }}>{new Date().toLocaleString()}</p>
+        </div>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr',
+            gap: '16px',
+            alignItems: 'start',
+          }}
+        >
+          <section style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.12)', paddingBottom: '12px' }}>
+            <h3 style={{ margin: '0 0 10px', fontSize: '16px', color: '#ffffff' }}>Profile</h3>
+            <div style={{ display: 'grid', gap: '8px', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+              {profileDetails.map((detail) => (
+                <div
+                  key={`snapshot-${detail.label}`}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    gap: '12px',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                    paddingBottom: '6px',
+                  }}
+                >
+                  <span style={{ fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#ff7f82' }}>{detail.label}</span>
+                  <span style={{ fontSize: '13px', textAlign: 'right' }}>{detail.value || '-'}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section>
+            <h3 style={{ margin: '0 0 10px', fontSize: '16px', color: '#ffffff' }}>Competitions</h3>
+            {competitions.length ? (
+              <div style={{ display: 'grid', gap: '8px' }}>
+                {competitions.map((item) => (
+                  <article
+                    key={`snapshot-${item.teamId}-${item.competitionId}`}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'minmax(0, 1fr)',
+                      gap: '10px',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                      paddingBottom: '10px',
+                    }}
+                  >
+                    <div>
+                      <p style={{ margin: 0, fontSize: '14px', fontWeight: 700 }}>{item.competitionName}</p>
+                      <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#b8b8c2' }}>{formatCompetitionSchedule(item)}</p>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'center' }}>
+                      <div>
+                        <p style={{ margin: 0, fontSize: '12px', color: '#d8d8e0' }}>{item.teamName}</p>
+                        <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#b8b8c2' }}>
+                          {item.venues?.length ? item.venues.map((v) => v.name).join(', ') : item.venueName || 'TBA'}
+                        </p>
+                      </div>
+                      <span
+                        style={{
+                          alignSelf: 'start',
+                          fontSize: '10px',
+                          letterSpacing: '0.08em',
+                          textTransform: 'uppercase',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          borderRadius: '999px',
+                          padding: '3px 8px',
+                          color: item.paymentStatus === 'Paid' ? '#9df0cc' : '#ff9c9f',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {item.paymentStatus}
+                      </span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p style={{ margin: 0, fontSize: '12px', color: '#b8b8c2' }}>No competitions assigned yet.</p>
+            )}
+          </section>
+        </div>
+      </div>
     </div>
   );
 }

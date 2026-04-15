@@ -102,6 +102,8 @@ export function AdminPointsPage() {
     const [editActivityName, setEditActivityName] = useState('')
     const [editActivityPoints, setEditActivityPoints] = useState('')
     const [editActivityDescription, setEditActivityDescription] = useState('')
+    const [editActivityCorrectAnswer, setEditActivityCorrectAnswer] = useState('')
+    const [editActivityError, setEditActivityError] = useState('')
     const [activitySearch, setActivitySearch] = useState('')
     const [reviewActivityId, setReviewActivityId] = useState('')
     const [reviewActivitySearch, setReviewActivitySearch] = useState('')
@@ -385,6 +387,11 @@ export function AdminPointsPage() {
         [activities, reviewActivityId],
     )
 
+    const editingActivity = useMemo(
+        () => activities.find((item) => item.id === editingActivityId) || null,
+        [activities, editingActivityId],
+    )
+
     const filteredActivities = useMemo(() => {
         const needle = activitySearch.trim().toLowerCase()
         if (!needle) return activities
@@ -464,6 +471,8 @@ export function AdminPointsPage() {
         setEditActivityName(activity.name)
         setEditActivityPoints(String(activity.points))
         setEditActivityDescription(activity.description || '')
+        setEditActivityCorrectAnswer(activity.correctAnswerCanonical || '')
+        setEditActivityError('')
     }
 
     const onCancelEditActivity = () => {
@@ -471,10 +480,20 @@ export function AdminPointsPage() {
         setEditActivityName('')
         setEditActivityPoints('')
         setEditActivityDescription('')
+        setEditActivityCorrectAnswer('')
+        setEditActivityError('')
     }
 
     const onSaveEditActivity = async () => {
-        if (!accessToken || !editingActivityId) return
+        if (!accessToken || !editingActivityId || !editingActivity) return
+
+        const isCorrectAnswerActivity = editingActivity.activityTypeCode === 'CORRECT_ANSWER'
+        if (isCorrectAnswerActivity && !editActivityCorrectAnswer.trim()) {
+            setEditActivityError('Correct answer is required for CORRECT_ANSWER activities.')
+            return
+        }
+
+        setEditActivityError('')
 
         try {
             openActionDialog('Updating Activity')
@@ -482,6 +501,7 @@ export function AdminPointsPage() {
                 name: editActivityName.trim(),
                 points: Number(editActivityPoints),
                 description: editActivityDescription.trim() || null,
+                correctAnswerCanonical: isCorrectAnswerActivity ? editActivityCorrectAnswer.trim() : undefined,
             })
             await refreshGlobalData()
             if (reviewActivityId) {
@@ -1314,81 +1334,36 @@ export function AdminPointsPage() {
                                                 {displayedActivities.map((item) => (
                                                     <tr key={item.id}>
                                                         <td>{item.code}</td>
-                                                        <td>
-                                                            {editingActivityId === item.id ? (
-                                                                <input
-                                                                    value={editActivityName}
-                                                                    onChange={(event) => setEditActivityName(event.target.value)}
-                                                                    placeholder="Activity name"
-                                                                />
-                                                            ) : (
-                                                                item.name
-                                                            )}
-                                                        </td>
+                                                        <td>{item.name}</td>
                                                         <td>{item.activityTypeCode}</td>
-                                                        <td>
-                                                            {editingActivityId === item.id ? (
-                                                                <input
-                                                                    type="number"
-                                                                    min={1}
-                                                                    max={1000}
-                                                                    value={editActivityPoints}
-                                                                    onChange={(event) => setEditActivityPoints(event.target.value)}
-                                                                />
-                                                            ) : (
-                                                                item.points
-                                                            )}
-                                                        </td>
-                                                        <td>
-                                                            {editingActivityId === item.id ? (
-                                                                <input
-                                                                    value={editActivityDescription}
-                                                                    onChange={(event) => setEditActivityDescription(event.target.value)}
-                                                                    placeholder="Description"
-                                                                />
-                                                            ) : (
-                                                                item.description || '-'
-                                                            )}
-                                                        </td>
+                                                        <td>{item.points}</td>
+                                                        <td>{item.description || '-'}</td>
                                                         <td>{item.isActive ? 'Active' : 'Inactive'}</td>
                                                         <td>
                                                             <div className="actions-row">
-                                                                {editingActivityId === item.id ? (
-                                                                    <>
-                                                                        <button type="button" onClick={() => void onSaveEditActivity()}>
-                                                                            Save
-                                                                        </button>
-                                                                        <button type="button" className="outline-button" onClick={onCancelEditActivity}>
-                                                                            Cancel
-                                                                        </button>
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <button type="button" onClick={() => onStartEditActivity(item)}>
-                                                                            Edit
-                                                                        </button>
-                                                                        <button
-                                                                            type="button"
-                                                                            className="outline-button"
-                                                                            onClick={() => {
-                                                                                void onToggleActivityStatus(item)
-                                                                            }}
-                                                                        >
-                                                                            {item.isActive ? 'Deactivate' : 'Activate'}
-                                                                        </button>
-                                                                        <button
-                                                                            type="button"
-                                                                            className="outline-button"
-                                                                            onClick={() => {
-                                                                                setReviewActivityId(item.id)
-                                                                                setReviewStatusFilter('PENDING')
-                                                                                setActiveActivitiesTab('review-submissions')
-                                                                            }}
-                                                                        >
-                                                                            Review Submissions
-                                                                        </button>
-                                                                    </>
-                                                                )}
+                                                                <button type="button" onClick={() => onStartEditActivity(item)}>
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    className="outline-button"
+                                                                    onClick={() => {
+                                                                        void onToggleActivityStatus(item)
+                                                                    }}
+                                                                >
+                                                                    {item.isActive ? 'Deactivate' : 'Activate'}
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    className="outline-button"
+                                                                    onClick={() => {
+                                                                        setReviewActivityId(item.id)
+                                                                        setReviewStatusFilter('PENDING')
+                                                                        setActiveActivitiesTab('review-submissions')
+                                                                    }}
+                                                                >
+                                                                    Review Submissions
+                                                                </button>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -1693,6 +1668,73 @@ export function AdminPointsPage() {
                             </tbody>
                         </table>
                     </article>
+                </div>
+            ) : null}
+
+            {editingActivityId ? (
+                <div className="admin-dialog-backdrop" role="presentation">
+                    <div className="admin-dialog" role="dialog" aria-live="polite" aria-modal="true">
+                        <h3>Edit Activity</h3>
+                        <form
+                            className="stack"
+                            onSubmit={(event) => {
+                                event.preventDefault()
+                                void onSaveEditActivity()
+                            }}
+                        >
+                            <label className="stack" style={{ gap: 6 }}>
+                                <span className="tiny muted">Activity Name</span>
+                                <input
+                                    value={editActivityName}
+                                    onChange={(event) => setEditActivityName(event.target.value)}
+                                    placeholder="Activity name"
+                                    required
+                                />
+                            </label>
+
+                            <label className="stack" style={{ gap: 6 }}>
+                                <span className="tiny muted">Points</span>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={1000}
+                                    value={editActivityPoints}
+                                    onChange={(event) => setEditActivityPoints(event.target.value)}
+                                    required
+                                />
+                            </label>
+
+                            <label className="stack" style={{ gap: 6 }}>
+                                <span className="tiny muted">Description</span>
+                                <input
+                                    value={editActivityDescription}
+                                    onChange={(event) => setEditActivityDescription(event.target.value)}
+                                    placeholder="Description"
+                                />
+                            </label>
+
+                            {editingActivity?.activityTypeCode === 'CORRECT_ANSWER' ? (
+                                <label className="stack" style={{ gap: 6 }}>
+                                    <span className="tiny muted">Correct Answer</span>
+                                    <input
+                                        value={editActivityCorrectAnswer}
+                                        onChange={(event) => setEditActivityCorrectAnswer(event.target.value)}
+                                        placeholder="Canonical correct answer"
+                                        required
+                                    />
+                                </label>
+                            ) : null}
+
+                            {editActivityError ? <p className="error-banner">{editActivityError}</p> : null}
+
+                            <div className="actions-row" style={{ justifyContent: 'flex-end' }}>
+                                <button type="button" className="outline-button" onClick={onCancelEditActivity}>
+                                    Cancel
+                                </button>
+                                <button type="submit">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             ) : null}
 

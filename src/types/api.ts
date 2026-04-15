@@ -196,6 +196,7 @@ export type ActivityType = {
   name: string
   description: string | null
   points: number
+  correctAnswerCanonical: string | null
   activityTypeId: string
   activityTypeCode: string
   activityTypeName: string

@@ -10,7 +10,7 @@ export function SignupVerifyPage() {
   const [searchParams] = useSearchParams()
 
   const [email, setEmail] = useState(searchParams.get('email') || '')
-  const [token, setToken] = useState(searchParams.get('token') || '')
+  const token = (searchParams.get('token') || '').trim()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -18,11 +18,17 @@ export function SignupVerifyPage() {
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+
+    if (!token) {
+      setMessage('Verification token is missing. Open the latest signup link from your email.')
+      return
+    }
+
     setIsSubmitting(true)
     setMessage('')
 
     try {
-      const result = await api.signupVerify(email.trim(), token.trim(), password, confirmPassword)
+      const result = await api.signupVerify(email.trim(), token, password, confirmPassword)
       setMessage(result.message)
       await login(email.trim(), password)
       navigate('/', { replace: true })
@@ -39,7 +45,7 @@ export function SignupVerifyPage() {
         <div className="auth-headline">
           <p className="eyebrow">Devday 2026 | OTP Verification</p>
           <h1 className="auth-title">Complete Operator Handshake</h1>
-          <p className="auth-subtitle">Validate your OTP token and lock in your console credentials.</p>
+          <p className="auth-subtitle">Use your secure email link to lock in your console credentials.</p>
         </div>
 
         <form className="auth-form" onSubmit={onSubmit}>
@@ -52,17 +58,6 @@ export function SignupVerifyPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               placeholder="participant@example.com"
-            />
-          </label>
-
-          <label>
-            OTP Token
-            <input
-              type="text"
-              required
-              value={token}
-              onChange={(event) => setToken(event.target.value)}
-              placeholder="Paste OTP token"
             />
           </label>
 
@@ -92,10 +87,14 @@ export function SignupVerifyPage() {
             />
           </label>
 
-          <button type="submit" disabled={isSubmitting}>
+          <button type="submit" disabled={isSubmitting || !token}>
             {isSubmitting ? 'Verifying Handshake...' : 'Verify and Enter Console'}
           </button>
         </form>
+
+        {!token ? (
+          <p className="status">Open the signup verification link from your email to continue.</p>
+        ) : null}
 
         {message ? <p className="status">{message}</p> : null}
 

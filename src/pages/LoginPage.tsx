@@ -44,12 +44,12 @@ export function LoginPage() {
         <div className="auth-page px-5 md:px-0">
             <section className="mx-auto w-full max-w-xl space-y-6 rounded-xl border border-[#2f2f3a] bg-[#0e0e14]/90 p-5 shadow-[0_16px_40px_rgba(0,0,0,0.35)] md:p-7">
                 <div className="space-y-2 border-b border-[#2a2a34] pb-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex justify-center items-center gap-3">
                         <img src="/devday-logo.png" alt="DevDay logo" className="h-11 w-7 object-contain" />
                         <p className="text-[11px] uppercase tracking-[0.16em] text-[#b8b8c2]">Devday 2026 | Portal Access</p>
                     </div>
-                    <h1 className="text-2xl font-bold leading-tight text-white md:text-3xl">Participant Login</h1>
-                    <p className="text-sm text-[#a9a9b4]">Login with your participant credentials to access your dashboard.</p>
+                    <h1 className="text-2xl text-center font-bold leading-tight text-white md:text-3xl">Participant Login</h1>
+                    {/* <p className="text-sm text-[#a9a9b4]">Login with your participant credentials to access your dashboard.</p> */}
                 </div>
 
                 <form className="space-y-4" onSubmit={onSubmit}>
@@ -85,7 +85,7 @@ export function LoginPage() {
                     </button>
                 </form>
 
-                <p className="text-sm text-[#b7b7c2]">
+                <p className="text-sm text-red-500">
                     Important: if you already joined a competition, use the same email to keep your points in one place.
                 </p>
 

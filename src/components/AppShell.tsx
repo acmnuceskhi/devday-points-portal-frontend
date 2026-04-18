@@ -57,10 +57,10 @@ export function AppShell() {
                         />
                         <div className="portal-title-block text-left">
                             <p className="eyebrow hidden md:block">DEVDAY '26</p>
-                            <h1 className="hidden text-xl font-bold leading-tight tracking-[0.02em] text-white md:block">
-                                DevDay Participant Portal
+                            <h1 className="hidden text-xl leading-tight tracking-[0.02em] text-white md:block">
+                                Participant Portal
                             </h1>
-                            <p className="text-sm font-bold uppercase tracking-[0.08em] text-white md:hidden">
+                            <p className="text-sm  uppercase tracking-[0.08em] text-white md:hidden">
                                 DevDay Portal
                             </p>
                         </div>

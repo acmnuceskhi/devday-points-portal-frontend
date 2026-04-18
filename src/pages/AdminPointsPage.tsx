@@ -949,7 +949,7 @@ export function AdminPointsPage() {
                                                     }`}
                                                 >
                                                     {completionActivityId === item.id ? (
-                                                        <span className="absolute right-2 top-2 text-[10px] font-bold uppercase tracking-widest text-[#ff7d80]">
+                                                        <span className="absolute right-2 top-2 text-[10px]  uppercase tracking-widest text-[#ff7d80]">
                                                             Selected
                                                         </span>
                                                     ) : null}
@@ -1412,7 +1412,7 @@ export function AdminPointsPage() {
                                                         }`}
                                                     >
                                                         {reviewActivityId === item.id ? (
-                                                            <span className="absolute right-2 top-2 text-[10px] font-bold uppercase tracking-widest text-[#ff7d80]">
+                                                            <span className="absolute right-2 top-2 text-[10px]  uppercase tracking-widest text-[#ff7d80]">
                                                                 Selected
                                                             </span>
                                                         ) : null}

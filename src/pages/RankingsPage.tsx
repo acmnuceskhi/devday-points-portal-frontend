@@ -42,8 +42,8 @@ export function RankingsPage() {
         <section className="dashboard-shell stack px-5 md:px-0">
             <section className="space-y-2 border-b border-[#2a2a34] pb-4">
                 <p className="text-[11px] uppercase tracking-[0.16em] text-[#b8b8c2]">Rankings</p>
-                <h2 className="text-2xl font-bold leading-tight text-white md:text-3xl">Points Leaderboard</h2>
-                <p className="text-sm text-[#a9a9b4]">See how participants rank by total points across the event.</p>
+                <h2 className="text-2xl  leading-tight text-white md:text-3xl">Points Leaderboard</h2>
+                {/* <p className="text-sm text-[#a9a9b4]">See how participants rank by total points across the event.</p> */}
             </section>
 
             {loading ? <TechLoader label="Loading leaderboard..." /> : null}
@@ -55,13 +55,13 @@ export function RankingsPage() {
                         <div>
                             <p className="text-[11px] uppercase tracking-[0.14em] text-[#b8b8c2]">Your Rank</p>
                             <strong className="mt-1 block text-[2.1rem] leading-none text-[#ff2a2f] md:text-[2.5rem]">{yourRank ? `#${yourRank}` : '--'}</strong>
-                            <p className="mt-1 text-xs text-[#a9a9b4]">Current position in the top 100 leaderboard.</p>
+                            {/* <p className="mt-1 text-xs text-[#a9a9b4]">Current position in the top 100 leaderboard.</p> */}
                         </div>
 
                         <div className="text-right">
                             <p className="text-[11px] uppercase tracking-[0.14em] text-[#b8b8c2]">Your Points</p>
                             <strong className="mt-1 block text-[1.5rem] leading-none text-white md:text-[1.8rem]">{yourEntry ? yourEntry.totalPoints : '--'}</strong>
-                            <p className="mt-1 text-xs text-[#a9a9b4]">Total points counted for ranking.</p>
+                            {/* <p className="mt-1 text-xs text-[#a9a9b4]">Total points counted for ranking.</p> */}
                         </div>
                     </section>
 

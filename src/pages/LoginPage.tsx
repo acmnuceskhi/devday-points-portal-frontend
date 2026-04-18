@@ -48,7 +48,7 @@ export function LoginPage() {
                         <img src="/devday-logo.png" alt="DevDay logo" className="h-11 w-7 object-contain" />
                         <p className="text-[11px] uppercase tracking-[0.16em] text-[#b8b8c2]">Devday 2026 | Portal Access</p>
                     </div>
-                    <h1 className="text-2xl text-center font-bold leading-tight text-white md:text-3xl">Participant Login</h1>
+                    <h1 className="text-2xl text-center  leading-tight text-white md:text-3xl">Participant Login</h1>
                     {/* <p className="text-sm text-[#a9a9b4]">Login with your participant credentials to access your dashboard.</p> */}
                 </div>
 
@@ -80,7 +80,7 @@ export function LoginPage() {
 
                     {errorMessage ? <p className="error-banner" role="alert">{errorMessage}</p> : null}
 
-                    <button type="submit" disabled={isSubmitting} className="w-full rounded-md bg-[#ff2a2f] px-4 py-3 text-sm font-bold uppercase tracking-widest text-white transition hover:bg-[#ea1e24] disabled:cursor-not-allowed disabled:opacity-70">
+                    <button type="submit" disabled={isSubmitting} className="w-full rounded-md bg-[#ff2a2f] px-4 py-3 text-sm  uppercase tracking-widest text-white transition hover:bg-[#ea1e24] disabled:cursor-not-allowed disabled:opacity-70">
                         {isSubmitting ? 'Logging In...' : 'Login'}
                     </button>
                 </form>

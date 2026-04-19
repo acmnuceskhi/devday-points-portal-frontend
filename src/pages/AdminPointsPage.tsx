@@ -613,7 +613,11 @@ export function AdminPointsPage() {
 
         try {
             openActionDialog('Rejecting Submission')
-            await api.rejectAdminSubmission(accessToken, submission.id, submissionNotes[submission.id]?.trim() || 'Rejected by admin')
+            const result = await api.rejectAdminSubmission(
+                accessToken,
+                submission.id,
+                submissionNotes[submission.id]?.trim() || 'Rejected by admin',
+            )
             if (selectedParticipantId && submission.participantId === selectedParticipantId) {
                 await refreshSelectedParticipantDetails()
             }
@@ -621,6 +625,19 @@ export function AdminPointsPage() {
                 await loadSubmissionsByActivity()
             }
             await refreshGlobalData()
+            if (result.noOp) {
+                showActionSuccess('Submission Already Rejected', 'No changes were needed; submission was already rejected.')
+                return
+            }
+
+            if (result.completionReversed) {
+                showActionSuccess(
+                    'Submission Rejected',
+                    `Submission was rejected and ${result.pointsRemoved || 0} points were reversed from the participant.`,
+                )
+                return
+            }
+
             showActionSuccess('Submission Rejected', 'Submission has been rejected and logged.')
         } catch (error) {
             showActionError('Could Not Reject Submission', error instanceof Error ? error.message : 'Rejection failed')
@@ -1508,7 +1525,7 @@ export function AdminPointsPage() {
                                                                         <div className="actions-row">
                                                                             <button
                                                                                 type="button"
-                                                                                disabled={submission.status === 'APPROVED'}
+                                                                                disabled={submission.status !== 'PENDING'}
                                                                                 onClick={() => onApproveSubmission(submission)}
                                                                             >
                                                                                 Approve
@@ -1516,7 +1533,6 @@ export function AdminPointsPage() {
                                                                             <button
                                                                                 type="button"
                                                                                 className="outline-button"
-                                                                                disabled={submission.status === 'REJECTED'}
                                                                                 onClick={() => onRejectSubmission(submission)}
                                                                             >
                                                                                 Reject

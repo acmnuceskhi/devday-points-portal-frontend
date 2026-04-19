@@ -36,6 +36,15 @@ type RequestOptions = {
   accessToken?: string | null
 }
 
+type AdminSubmissionReviewResponse = {
+  submissionId: string
+  decision: 'APPROVED' | 'REJECTED'
+  noOp?: boolean
+  previousStatus?: 'PENDING' | 'APPROVED' | 'REJECTED'
+  completionReversed?: boolean
+  pointsRemoved?: number
+}
+
 export class ApiRequestError extends Error {
   code: string | null
   status: number | null
@@ -251,14 +260,14 @@ export const api = {
     })
   },
   approveAdminSubmission(accessToken: string, submissionId: string, note?: string) {
-    return request(`/points/admin/submissions/${submissionId}/approve`, {
+    return request<AdminSubmissionReviewResponse>(`/points/admin/submissions/${submissionId}/approve`, {
       method: 'POST',
       accessToken,
       body: { note },
     })
   },
   rejectAdminSubmission(accessToken: string, submissionId: string, note?: string) {
-    return request(`/points/admin/submissions/${submissionId}/reject`, {
+    return request<AdminSubmissionReviewResponse>(`/points/admin/submissions/${submissionId}/reject`, {
       method: 'POST',
       accessToken,
       body: { note },

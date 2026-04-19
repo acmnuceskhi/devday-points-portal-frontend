@@ -12,6 +12,8 @@ export function SignupPage() {
   const [signupLink, setSignupLink] = useState('')
   const [hint, setHint] = useState('')
   const [registeredLoginPath, setRegisteredLoginPath] = useState('')
+  const [pendingVerifyEmail, setPendingVerifyEmail] = useState('')
+  const [showSignupConfirmDialog, setShowSignupConfirmDialog] = useState(false)
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -20,15 +22,19 @@ export function SignupPage() {
     setSignupLink('')
     setHint('')
     setRegisteredLoginPath('')
+    setPendingVerifyEmail('')
+    setShowSignupConfirmDialog(false)
 
     try {
-      const result = await api.signupRequest(email.trim(), fullName.trim())
-      setMessage(result.message)
+      const normalizedEmail = email.trim()
+      const result = await api.signupRequest(normalizedEmail, fullName.trim())
+      setMessage(`Verification email sent to ${normalizedEmail} if such an email exists.`)
       setHint(result.hint || '')
       if (result.signupLink) {
         setSignupLink(result.signupLink)
       }
-      navigate(`/signup/verify?email=${encodeURIComponent(email.trim())}`)
+      setPendingVerifyEmail(normalizedEmail)
+      setShowSignupConfirmDialog(true)
     } catch (error) {
       if (error instanceof ApiRequestError && error.code === 'PARTICIPANT_ALREADY_REGISTERED') {
         const details = (error.details as { loginPath?: string } | null) || null
@@ -40,6 +46,15 @@ export function SignupPage() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const continueToVerify = () => {
+    if (!pendingVerifyEmail) return
+    navigate(`/signup/verify?email=${encodeURIComponent(pendingVerifyEmail)}`)
+  }
+
+  const goBackFromDialog = () => {
+    setShowSignupConfirmDialog(false)
   }
 
   return (
@@ -104,6 +119,24 @@ export function SignupPage() {
           Already registered? <Link to="/login" className="text-[#ff7d80] hover:text-[#ff2a2f]">Login</Link>
         </p>
       </section>
+
+      {showSignupConfirmDialog ? (
+        <div className="admin-dialog-backdrop" role="presentation">
+          <div className="admin-dialog" role="dialog" aria-modal="true" aria-live="polite">
+            <h3>Verification Email Sent</h3>
+            <p className="muted">
+              Verification email sent to {pendingVerifyEmail} if such an email exists.
+            </p>
+            <p className="muted tiny">
+              If you already registered in competitions, login using the same email to keep your points and activity history unified.
+            </p>
+            <div className="actions-row">
+              <button type="button" onClick={continueToVerify}>OK, continue</button>
+              <button type="button" className="outline-button" onClick={goBackFromDialog}>No, go back</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

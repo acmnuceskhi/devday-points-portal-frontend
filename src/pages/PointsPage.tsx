@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { api } from '../lib/api'
 import type { ActivityProgressItem, PointsSummary } from '../types/api'
 import { TechLoader } from '../components/TechLoader'
+import { LinkifiedText } from '../components/LinkifiedText'
 
 type SubmissionDialogState = {
     isOpen: boolean
@@ -271,7 +272,9 @@ export function PointsPage() {
                                     >
                                         <div className="pr-3">
                                             <p className="stream-title">{item.name}</p>
-                                            <p className="objective-meta">{item.description || 'No description provided.'}</p>
+                                            <p className="objective-meta">
+                                                <LinkifiedText text={item.description || 'No description provided.'} />
+                                            </p>
                                         </div>
                                         <div className="mt-4 flex items-end justify-between gap-3">
                                             <div className="space-y-1">
@@ -310,7 +313,9 @@ export function PointsPage() {
                                     >
                                         <div className="pr-3">
                                             <p className="stream-title">{item.name}</p>
-                                            <p className="objective-meta">{item.description || 'No description provided.'}</p>
+                                            <p className="objective-meta">
+                                                <LinkifiedText text={item.description || 'No description provided.'} />
+                                            </p>
                                         </div>
                                         <div className="mt-4 flex items-end justify-between gap-3">
                                             <div className="space-y-1">
@@ -336,8 +341,10 @@ export function PointsPage() {
             {selectedActivity ? (
                 <div className="admin-dialog-backdrop" role="presentation" onClick={closeActivityDialog}>
                     <div className="admin-dialog" role="dialog" aria-live="polite" onClick={(event) => event.stopPropagation()}>
-                        <h3>{selectedActivity.name}</h3>
-                        <p className="muted tiny">{selectedActivity.description || 'No description'}</p>
+                        <h3 className="font-bold text-white">{selectedActivity.name}</h3>
+                        <p className="muted tiny">
+                            <LinkifiedText text={selectedActivity.description || 'No description'} />
+                        </p>
                         <div className="data-list compact">
                             <div>
                                 <dt>Points</dt>

@@ -14,6 +14,7 @@ import type {
     PointsLeaderboardItem,
     RankingItem,
 } from '../types/api'
+import { LinkifiedText } from '../components/LinkifiedText'
 
 type AdminTab = 'participant-workflow' | 'activities' | 'audit'
 
@@ -1337,7 +1338,7 @@ export function AdminPointsPage() {
                                                         <td>{item.name}</td>
                                                         <td>{item.activityTypeCode}</td>
                                                         <td>{item.points}</td>
-                                                        <td>{item.description || '-'}</td>
+                                                        <td><LinkifiedText text={item.description || '-'} /></td>
                                                         <td>{item.isActive ? 'Active' : 'Inactive'}</td>
                                                         <td>
                                                             <div className="actions-row">

@@ -11,6 +11,7 @@ export function LoginPage() {
     const [password, setPassword] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
+    const [showRecommendationDialog, setShowRecommendationDialog] = useState(false)
 
     useEffect(() => {
         if (isAuthenticated) {
@@ -28,6 +29,7 @@ export function LoginPage() {
     const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault()
         setErrorMessage('')
+        setShowRecommendationDialog(true)
         setIsSubmitting(true)
 
         try {
@@ -71,6 +73,7 @@ export function LoginPage() {
                         <input
                             autoComplete="current-password"
                             type="password"
+                            required
                             value={password}
                             onChange={(event) => setPassword(event.target.value)}
                             placeholder="Enter your password"
@@ -86,13 +89,27 @@ export function LoginPage() {
                 </form>
 
                 <p className="text-sm text-red-500">
-                    Important: if you already joined a competition, use the same email to keep your points in one place.
+                    Important: if you already joined a competition, sign up using the same email to keep your points in one place.
                 </p>
 
                 <p className="text-xs text-[#a9a9b4]">
                     New participant? <Link to="/signup" className="text-[#ff7d80] hover:text-[#ff2a2f]">Create account</Link>
                 </p>
             </section>
+
+            {showRecommendationDialog ? (
+                <div className="admin-dialog-backdrop" role="presentation">
+                    <div className="admin-dialog" role="dialog" aria-modal="true" aria-live="polite">
+                        <h3>Recommendation</h3>
+                        <p className="muted tiny">
+                            If you are already registered in a competition, make sure to sign up using that account instead.
+                        </p>
+                        <div className="actions-row" style={{ justifyContent: 'flex-end' }}>
+                            <button type="button" onClick={() => setShowRecommendationDialog(false)}>OK</button>
+                        </div>
+                    </div>
+                </div>
+            ) : null}
         </div>
     )
 }

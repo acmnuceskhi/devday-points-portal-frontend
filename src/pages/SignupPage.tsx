@@ -8,52 +8,44 @@ export function SignupPage() {
   const [email, setEmail] = useState('')
   const [fullName, setFullName] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [message, setMessage] = useState('')
-  const [signupLink, setSignupLink] = useState('')
-  const [hint, setHint] = useState('')
-  const [registeredLoginPath, setRegisteredLoginPath] = useState('')
-  const [pendingVerifyEmail, setPendingVerifyEmail] = useState('')
+  const [dialogError, setDialogError] = useState('')
   const [showSignupConfirmDialog, setShowSignupConfirmDialog] = useState(false)
 
-  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (isSubmitting) return
+    setDialogError('')
+    setShowSignupConfirmDialog(true)
+  }
+
+  const continueToVerify = async () => {
+    const normalizedEmail = email.trim()
+    if (!normalizedEmail || !fullName.trim()) {
+      setDialogError('Enter your full name and email to continue.')
+      return
+    }
+
     setIsSubmitting(true)
-    setMessage('')
-    setSignupLink('')
-    setHint('')
-    setRegisteredLoginPath('')
-    setPendingVerifyEmail('')
-    setShowSignupConfirmDialog(false)
+    setDialogError('')
 
     try {
-      const normalizedEmail = email.trim()
-      const result = await api.signupRequest(normalizedEmail, fullName.trim())
-      setMessage(`Verification email sent to ${normalizedEmail} if such an email exists.`)
-      setHint(result.hint || '')
-      if (result.signupLink) {
-        setSignupLink(result.signupLink)
-      }
-      setPendingVerifyEmail(normalizedEmail)
-      setShowSignupConfirmDialog(true)
+      await api.signupRequest(normalizedEmail, fullName.trim())
+      setShowSignupConfirmDialog(false)
+      navigate(`/signup/verify?email=${encodeURIComponent(normalizedEmail)}`)
     } catch (error) {
       if (error instanceof ApiRequestError && error.code === 'PARTICIPANT_ALREADY_REGISTERED') {
-        const details = (error.details as { loginPath?: string } | null) || null
-        const loginPath = details?.loginPath || '/login'
-        const connector = loginPath.includes('?') ? '&' : '?'
-        setRegisteredLoginPath(`${loginPath}${connector}email=${encodeURIComponent(email.trim())}`)
+        navigate(`/login?email=${encodeURIComponent(normalizedEmail)}`)
+        return
       }
-      setMessage(error instanceof Error ? error.message : 'Could not request signup link')
+      setDialogError(error instanceof Error ? error.message : 'Could not request signup link')
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const continueToVerify = () => {
-    if (!pendingVerifyEmail) return
-    navigate(`/signup/verify?email=${encodeURIComponent(pendingVerifyEmail)}`)
-  }
-
   const goBackFromDialog = () => {
+    if (isSubmitting) return
+    setDialogError('')
     setShowSignupConfirmDialog(false)
   }
 
@@ -100,21 +92,6 @@ export function SignupPage() {
           </button>
         </form>
 
-        {message ? <p className="status">{message}</p> : null}
-        {hint ? <p className="text-xs text-[#a9a9b4]">{hint}</p> : null}
-        {registeredLoginPath ? (
-          <p className="text-xs text-[#a9a9b4]">
-            Existing participant detected. Continue to <Link to={registeredLoginPath} className="text-[#ff7d80] hover:text-[#ff2a2f]">login</Link> with this email.
-          </p>
-        ) : null}
-        {signupLink ? (
-          <p className="text-xs text-[#a9a9b4] break-all">
-            Dev token link: <a href={signupLink} className="text-[#ff7d80] hover:text-[#ff2a2f]">{signupLink}</a>
-          </p>
-        ) : null}
-
-        <p className="text-sm text-[#b7b7c2]">Use your competition-registered email so your activity progress and points remain unified.</p>
-
         <p className="text-xs text-[#a9a9b4]">
           Already registered? <Link to="/login" className="text-[#ff7d80] hover:text-[#ff2a2f]">Login</Link>
         </p>
@@ -123,16 +100,14 @@ export function SignupPage() {
       {showSignupConfirmDialog ? (
         <div className="admin-dialog-backdrop" role="presentation">
           <div className="admin-dialog" role="dialog" aria-modal="true" aria-live="polite">
-            <h3>Verification Email Sent</h3>
-            <p className="muted">
-              Verification email sent to {pendingVerifyEmail} if such an email exists.
-            </p>
+            <h3>Recommendation</h3>
             <p className="muted tiny">
-              If you already registered in competitions, login using the same email to keep your points and activity history unified.
+              Use the same email you used for competition registration (if any) to keep points unified.
             </p>
+            {dialogError ? <p className="status">{dialogError}</p> : null}
             <div className="actions-row">
-              <button type="button" onClick={continueToVerify}>OK, continue</button>
-              <button type="button" className="outline-button" onClick={goBackFromDialog}>No, go back</button>
+              <button type="button" onClick={continueToVerify} disabled={isSubmitting}>{isSubmitting ? 'Sending...' : 'OK, continue'}</button>
+              <button type="button" className="outline-button" onClick={goBackFromDialog} disabled={isSubmitting}>No, go back</button>
             </div>
           </div>
         </div>

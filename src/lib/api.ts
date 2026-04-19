@@ -36,6 +36,32 @@ type RequestOptions = {
   accessToken?: string | null
 }
 
+export const SESSION_EXPIRED_EVENT = 'devday:session-expired'
+
+export type SessionScope = 'participant' | 'admin'
+
+export type SessionExpiredDetail = {
+  scope: SessionScope
+  status: number
+  code: string | null
+}
+
+function resolveSessionScope(path: string): SessionScope {
+  if (path.startsWith('/auth/admin') || path.includes('/points/admin')) {
+    return 'admin'
+  }
+
+  return 'participant'
+}
+
+function emitSessionExpired(detail: SessionExpiredDetail) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.dispatchEvent(new CustomEvent<SessionExpiredDetail>(SESSION_EXPIRED_EVENT, { detail }))
+}
+
 type AdminSubmissionReviewResponse = {
   submissionId: string
   decision: 'APPROVED' | 'REJECTED'
@@ -88,6 +114,15 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     } catch {
       // Keep fallback message when backend returns non-JSON body.
     }
+
+    if (response.status === 401 && options.accessToken) {
+      emitSessionExpired({
+        scope: resolveSessionScope(path),
+        status: response.status,
+        code,
+      })
+    }
+
     throw new ApiRequestError(message, { code, status: response.status, details })
   }
 

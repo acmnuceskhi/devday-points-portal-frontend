@@ -1,6 +1,7 @@
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { api } from '../lib/api'
+import { SESSION_EXPIRED_EVENT, api } from '../lib/api'
+import type { SessionExpiredDetail } from '../lib/api'
 import {
   clearStoredAdminAccessToken,
   getStoredAdminAccessToken,
@@ -32,12 +33,28 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     setStaffProfile(result.staffProfile)
   }
 
-  const logout = () => {
+  const logout = useCallback(() => {
     clearStoredAdminAccessToken()
     setAccessToken(null)
     setUser(null)
     setStaffProfile(null)
-  }
+  }, [])
+
+  useEffect(() => {
+    const onSessionExpired = (event: Event) => {
+      const customEvent = event as CustomEvent<SessionExpiredDetail>
+      if (customEvent.detail?.scope !== 'admin') {
+        return
+      }
+
+      logout()
+    }
+
+    window.addEventListener(SESSION_EXPIRED_EVENT, onSessionExpired)
+    return () => {
+      window.removeEventListener(SESSION_EXPIRED_EVENT, onSessionExpired)
+    }
+  }, [logout])
 
   const value = useMemo<AdminAuthContextValue>(
     () => ({

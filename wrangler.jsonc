@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "devday-points-portal-frontend",
+  "name": "dev-devday-points-portal-frontend",
   "compatibility_date": "2026-04-03",
   "observability": {
     "enabled": true

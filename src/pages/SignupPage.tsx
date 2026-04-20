@@ -9,11 +9,13 @@ export function SignupPage() {
   const [fullName, setFullName] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [dialogError, setDialogError] = useState('')
+  const [statusMessage, setStatusMessage] = useState('')
   const [showSignupConfirmDialog, setShowSignupConfirmDialog] = useState(false)
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (isSubmitting) return
+    setStatusMessage('')
     setDialogError('')
     setShowSignupConfirmDialog(true)
   }
@@ -31,7 +33,7 @@ export function SignupPage() {
     try {
       await api.signupRequest(normalizedEmail, fullName.trim())
       setShowSignupConfirmDialog(false)
-      navigate(`/signup/verify?email=${encodeURIComponent(normalizedEmail)}`)
+      setStatusMessage(`Verification link sent to ${normalizedEmail} if such an email exists.`)
     } catch (error) {
       if (error instanceof ApiRequestError && error.code === 'PARTICIPANT_ALREADY_REGISTERED') {
         navigate(`/login?email=${encodeURIComponent(normalizedEmail)}`)
@@ -91,6 +93,8 @@ export function SignupPage() {
             {isSubmitting ? 'Sending Verification Link...' : 'Send Verification Link'}
           </button>
         </form>
+
+        {statusMessage ? <p className="status">{statusMessage}</p> : null}
 
         <p className="text-xs text-[#a9a9b4]">
           Already registered? <Link to="/login" className="text-[#ff7d80] hover:text-[#ff2a2f]">Login</Link>

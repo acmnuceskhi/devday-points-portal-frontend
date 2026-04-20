@@ -85,6 +85,18 @@ export class ApiRequestError extends Error {
   }
 }
 
+function getPublicErrorMessage(status: number): string {
+  if (status === 400) return 'Request could not be processed. Please check your input and try again.'
+  if (status === 401) return 'Authentication failed. Please check your credentials and try again.'
+  if (status === 403) return 'You do not have permission to perform this action.'
+  if (status === 404) return 'The requested resource was not found.'
+  if (status === 409) return 'This action could not be completed due to a conflict.'
+  if (status === 422) return 'Some fields are invalid. Please review and try again.'
+  if (status === 429) return 'Too many requests. Please wait a moment and try again.'
+  if (status >= 500) return 'Something went wrong on the server. Please try again later.'
+  return 'Request failed. Please try again.'
+}
+
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -101,14 +113,11 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   })
 
   if (!response.ok) {
-    let message = `Request failed with status ${response.status}`
+    const message = getPublicErrorMessage(response.status)
     let code: string | null = null
     let details: unknown = null
     try {
       const body = (await response.json()) as ApiErrorResponse
-      if (body.error?.message) {
-        message = body.error.message
-      }
       code = body.error?.code ?? null
       details = body.error?.details ?? null
     } catch {

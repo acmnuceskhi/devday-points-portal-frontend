@@ -26,10 +26,15 @@ export function LoginPage() {
         }
     }, [searchParams])
 
-    const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    const onSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault()
+        if (isSubmitting) return
         setErrorMessage('')
         setShowRecommendationDialog(true)
+    }
+
+    const continueLogin = async () => {
+        if (isSubmitting) return
         setIsSubmitting(true)
 
         try {
@@ -37,9 +42,15 @@ export function LoginPage() {
             navigate('/', { replace: true })
         } catch (error) {
             setErrorMessage(error instanceof Error ? error.message : 'Login failed')
+            setShowRecommendationDialog(false)
         } finally {
             setIsSubmitting(false)
         }
+    }
+
+    const closeRecommendationDialog = () => {
+        if (isSubmitting) return
+        setShowRecommendationDialog(false)
     }
 
     return (
@@ -50,7 +61,7 @@ export function LoginPage() {
                         <img src="/devday-logo.png" alt="DevDay logo" className="h-11 w-7 object-contain" />
                         <p className="text-[11px] uppercase tracking-[0.16em] text-[#b8b8c2]">Devday 2026 | Portal Access</p>
                     </div>
-                    <h1 className="text-2xl text-center  leading-tight text-white md:text-3xl">Participant Login</h1>
+                    <h1 className="text-2xl text-center  leading-tight text-white font-bold md:text-3xl">Participant Login</h1>
                     {/* <p className="text-sm text-[#a9a9b4]">Login with your participant credentials to access your dashboard.</p> */}
                 </div>
 
@@ -93,7 +104,7 @@ export function LoginPage() {
                 </p>
 
                 <p className="text-xs text-[#a9a9b4]">
-                    New participant? <Link to="/signup" className="text-[#ff7d80] hover:text-[#ff2a2f]">Create account</Link>
+                    New participant? <Link to="/signup" className="text-[#ff7d80] hover:text-[#ff2a2f]">Sign Up</Link>
                 </p>
             </section>
 
@@ -105,7 +116,8 @@ export function LoginPage() {
                             If you are already registered in a competition, make sure to sign up using that account instead.
                         </p>
                         <div className="actions-row" style={{ justifyContent: 'flex-end' }}>
-                            <button type="button" onClick={() => setShowRecommendationDialog(false)}>OK</button>
+                            <button type="button" className="outline-button" onClick={closeRecommendationDialog} disabled={isSubmitting}>Go back</button>
+                            <button type="button" onClick={continueLogin} disabled={isSubmitting}>{isSubmitting ? 'Logging In...' : 'Continue to login'}</button>
                         </div>
                     </div>
                 </div>

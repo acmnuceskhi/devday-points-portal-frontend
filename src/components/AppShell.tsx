@@ -14,6 +14,8 @@ export function AppShell() {
     const location = useLocation()
 
     const onLogout = () => {
+        const confirmed = window.confirm('Are you sure you want to log out?')
+        if (!confirmed) return
         logout()
         navigate('/login', { replace: true })
     }

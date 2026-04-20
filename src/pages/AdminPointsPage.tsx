@@ -435,6 +435,8 @@ export function AdminPointsPage() {
     const newActivityCodePreview = useMemo(() => makeActivityCodePreview(newActivityName), [newActivityName])
 
     const onLogout = () => {
+        const confirmed = window.confirm('Are you sure you want to log out?')
+        if (!confirmed) return
         logout()
         navigate('/admin/login', { replace: true })
     }

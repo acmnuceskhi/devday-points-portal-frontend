@@ -1,49 +1,49 @@
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-const navItems = [
-    { label: 'Dashboard', to: '/' },
-    // { label: 'My Competitions', to: '/my-competitions' },
-    { label: 'Points/Activities', to: '/points' },
-    { label: 'Leaderboard', to: '/rankings' },
-]
+// Page switcher removed for dashboard-only participant flow.
+// const navItems = [
+//     { label: 'Dashboard', to: '/' },
+//     // { label: 'My Competitions', to: '/my-competitions' },
+//     { label: 'Points/Activities', to: '/points' },
+//     { label: 'Leaderboard', to: '/rankings' },
+// ]
 
 export function AppShell() {
     const { logout } = useAuth()
     const navigate = useNavigate()
-    const location = useLocation()
 
     const onLogout = () => {
         logout()
         navigate('/login', { replace: true })
     }
 
-    const renderMobileIcon = (path: string) => {
-        const isActive = location.pathname === path
-        const baseClass = isActive ? 'text-[#ff2a2f]' : 'text-[#b8b8c2]'
+    // const renderMobileIcon = (path: string) => {
+    //     const isActive = location.pathname === path
+    //     const baseClass = isActive ? 'text-[#ff2a2f]' : 'text-[#b8b8c2]'
 
-        if (path === '/') {
-            return (
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" className={baseClass} aria-hidden="true">
-                    <path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1V10.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-            )
-        }
+    //     if (path === '/') {
+    //         return (
+    //             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" className={baseClass} aria-hidden="true">
+    //                 <path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1V10.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    //             </svg>
+    //         )
+    //     }
 
-        if (path === '/points') {
-            return (
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" className={baseClass} aria-hidden="true">
-                    <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-            )
-        }
+    //     if (path === '/points') {
+    //         return (
+    //             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" className={baseClass} aria-hidden="true">
+    //                 <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    //             </svg>
+    //         )
+    //     }
 
-        return (
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" className={baseClass} aria-hidden="true">
-                <path d="M8 21h8M12 17v4M6.5 4h11l-1.5 5a4 4 0 0 1-4 3H12a4 4 0 0 1-4-3L6.5 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-        )
-    }
+    //     return (
+    //         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" className={baseClass} aria-hidden="true">
+    //             <path d="M8 21h8M12 17v4M6.5 4h11l-1.5 5a4 4 0 0 1-4 3H12a4 4 0 0 1-4-3L6.5 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    //         </svg>
+    //     )
+    // }
 
     return (
         <div className="portal-frame">
@@ -92,6 +92,7 @@ export function AppShell() {
                 </div>
             </header>
 
+            {/*
             <nav className="tabs" aria-label="Portal navigation">
                 {navItems.map((item) => (
                     <NavLink
@@ -127,14 +128,17 @@ export function AppShell() {
                     ))}
                 </div>
             </nav>
+            */}
 
-            <main className="page-content pb-28 md:pb-0">
+            <main className="page-content pb-6 md:pb-0">
                 <Outlet />
+                {/*
                 <div
                     className="md:hidden"
                     style={{ height: 'calc(5.75rem + env(safe-area-inset-bottom))' }}
                     aria-hidden="true"
                 />
+                */}
             </main>
         </div>
     )

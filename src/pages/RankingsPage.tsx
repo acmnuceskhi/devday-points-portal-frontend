@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { api } from '../lib/api'
+import { api } from '../lib/api.legacy'
 import { useAuth } from '../context/AuthContext'
 import type { PointsLeaderboardItem } from '../types/api'
 import { TechLoader } from '../components/TechLoader'

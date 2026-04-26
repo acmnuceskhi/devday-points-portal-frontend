@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { api } from '../lib/api'
+import { api } from '../lib/api.legacy'
 import type { ActivityProgressItem, PointsSummary } from '../types/api'
 import { TechLoader } from '../components/TechLoader'
 

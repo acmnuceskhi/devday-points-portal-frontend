@@ -1,14 +1,14 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import { AdminProtectedRoute } from './components/AdminProtectedRoute'
+// import { AdminProtectedRoute } from './components/AdminProtectedRoute'
 import { AppShell } from './components/AppShell'
 import { ProtectedRoute } from './components/ProtectedRoute'
-import { AdminLoginPage } from './pages/AdminLoginPage'
+// import { AdminLoginPage } from './pages/AdminLoginPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { NotFoundPage } from './pages/NotFoundPage'
-import { AdminPointsPage } from './pages/AdminPointsPage'
-import { PointsPage } from './pages/PointsPage'
-import { RankingsPage } from './pages/RankingsPage'
+// import { AdminPointsPage } from './pages/AdminPointsPage'
+// import { PointsPage } from './pages/PointsPage'
+// import { RankingsPage } from './pages/RankingsPage'
 import { SignupPage } from './pages/SignupPage'
 import { SignupVerifyPage } from './pages/SignupVerifyPage'
 
@@ -31,19 +31,19 @@ function App() {
           {/* <Route path="my-competitions" element={<MyCompetitionsPage />} /> */}
           {/* <Route path="competitions" element={<CompetitionsPage />} />
           <Route path="competitions/:competitionId" element={<CompetitionDetailPage />} /> */}
-          <Route path="rankings" element={<RankingsPage />} />
-          <Route path="points" element={<PointsPage />} />
+          {/* <Route path="rankings" element={<RankingsPage />} /> */}
+          {/* <Route path="points" element={<PointsPage />} /> */}
         </Route>
-        <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
-        <Route path="/admin/login" element={<AdminLoginPage />} />
-        <Route
+        {/* <Route path="/admin" element={<Navigate to="/admin/login" replace />} /> */}
+        {/* <Route path="/admin/login" element={<AdminLoginPage />} /> */}
+        {/* <Route
           path="/admin/points"
           element={
             <AdminProtectedRoute>
               <AdminPointsPage />
             </AdminProtectedRoute>
           }
-        />
+        /> */}
         <Route path="/404" element={<NotFoundPage />} />
         <Route path="*" element={<Navigate to="/404" replace />} />
       </Routes>

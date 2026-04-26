@@ -20,6 +20,41 @@ type RequestOptions = {
   accessToken?: string | null
 }
 
+export const SESSION_EXPIRED_EVENT = 'devday:session-expired'
+
+export type SessionScope = 'participant' | 'admin'
+
+export type SessionExpiredDetail = {
+  scope: SessionScope
+  status: number
+  code: string | null
+}
+
+function resolveSessionScope(path: string): SessionScope {
+  if (path.startsWith('/auth/admin') || path.includes('/points/admin')) {
+    return 'admin'
+  }
+
+  return 'participant'
+}
+
+function emitSessionExpired(detail: SessionExpiredDetail) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.dispatchEvent(new CustomEvent<SessionExpiredDetail>(SESSION_EXPIRED_EVENT, { detail }))
+}
+
+type AdminSubmissionReviewResponse = {
+  submissionId: string
+  decision: 'APPROVED' | 'REJECTED'
+  noOp?: boolean
+  previousStatus?: 'PENDING' | 'APPROVED' | 'REJECTED'
+  completionReversed?: boolean
+  pointsRemoved?: number
+}
+
 export class ApiRequestError extends Error {
   code: string | null
   status: number | null
@@ -32,6 +67,18 @@ export class ApiRequestError extends Error {
     this.status = options.status ?? null
     this.details = options.details
   }
+}
+
+function getPublicErrorMessage(status: number): string {
+  if (status === 400) return 'Request could not be processed. Please check your input and try again.'
+  if (status === 401) return 'Authentication failed. Please check your credentials and try again.'
+  if (status === 403) return 'You do not have permission to perform this action.'
+  if (status === 404) return 'The requested resource was not found.'
+  if (status === 409) return 'This action could not be completed due to a conflict.'
+  if (status === 422) return 'Some fields are invalid. Please review and try again.'
+  if (status === 429) return 'Too many requests. Please wait a moment and try again.'
+  if (status >= 500) return 'Something went wrong on the server. Please try again later.'
+  return 'Request failed. Please try again.'
 }
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -50,19 +97,25 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   })
 
   if (!response.ok) {
-    let message = `Request failed with status ${response.status}`
+    const message = getPublicErrorMessage(response.status)
     let code: string | null = null
     let details: unknown = null
     try {
       const body = (await response.json()) as ApiErrorResponse
-      if (body.error?.message) {
-        message = body.error.message
-      }
       code = body.error?.code ?? null
       details = body.error?.details ?? null
     } catch {
       // Keep fallback message when backend returns non-JSON body.
     }
+
+    if (response.status === 401 && options.accessToken) {
+      emitSessionExpired({
+        scope: resolveSessionScope(path),
+        status: response.status,
+        code,
+      })
+    }
+
     throw new ApiRequestError(message, { code, status: response.status, details })
   }
 

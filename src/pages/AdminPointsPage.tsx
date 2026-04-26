@@ -14,6 +14,7 @@ import type {
     PointsLeaderboardItem,
     RankingItem,
 } from '../types/api'
+import { LinkifiedText } from '../components/LinkifiedText'
 
 type AdminTab = 'participant-workflow' | 'activities' | 'audit'
 
@@ -434,6 +435,8 @@ export function AdminPointsPage() {
     const newActivityCodePreview = useMemo(() => makeActivityCodePreview(newActivityName), [newActivityName])
 
     const onLogout = () => {
+        const confirmed = window.confirm('Are you sure you want to log out?')
+        if (!confirmed) return
         logout()
         navigate('/admin/login', { replace: true })
     }
@@ -612,7 +615,11 @@ export function AdminPointsPage() {
 
         try {
             openActionDialog('Rejecting Submission')
-            await api.rejectAdminSubmission(accessToken, submission.id, submissionNotes[submission.id]?.trim() || 'Rejected by admin')
+            const result = await api.rejectAdminSubmission(
+                accessToken,
+                submission.id,
+                submissionNotes[submission.id]?.trim() || 'Rejected by admin',
+            )
             if (selectedParticipantId && submission.participantId === selectedParticipantId) {
                 await refreshSelectedParticipantDetails()
             }
@@ -620,6 +627,19 @@ export function AdminPointsPage() {
                 await loadSubmissionsByActivity()
             }
             await refreshGlobalData()
+            if (result.noOp) {
+                showActionSuccess('Submission Already Rejected', 'No changes were needed; submission was already rejected.')
+                return
+            }
+
+            if (result.completionReversed) {
+                showActionSuccess(
+                    'Submission Rejected',
+                    `Submission was rejected and ${result.pointsRemoved || 0} points were reversed from the participant.`,
+                )
+                return
+            }
+
             showActionSuccess('Submission Rejected', 'Submission has been rejected and logged.')
         } catch (error) {
             showActionError('Could Not Reject Submission', error instanceof Error ? error.message : 'Rejection failed')
@@ -949,7 +969,7 @@ export function AdminPointsPage() {
                                                     }`}
                                                 >
                                                     {completionActivityId === item.id ? (
-                                                        <span className="absolute right-2 top-2 text-[10px] font-bold uppercase tracking-widest text-[#ff7d80]">
+                                                        <span className="absolute right-2 top-2 text-[10px]  uppercase tracking-widest text-[#ff7d80]">
                                                             Selected
                                                         </span>
                                                     ) : null}
@@ -1337,7 +1357,7 @@ export function AdminPointsPage() {
                                                         <td>{item.name}</td>
                                                         <td>{item.activityTypeCode}</td>
                                                         <td>{item.points}</td>
-                                                        <td>{item.description || '-'}</td>
+                                                        <td><LinkifiedText text={item.description || '-'} /></td>
                                                         <td>{item.isActive ? 'Active' : 'Inactive'}</td>
                                                         <td>
                                                             <div className="actions-row">
@@ -1412,7 +1432,7 @@ export function AdminPointsPage() {
                                                         }`}
                                                     >
                                                         {reviewActivityId === item.id ? (
-                                                            <span className="absolute right-2 top-2 text-[10px] font-bold uppercase tracking-widest text-[#ff7d80]">
+                                                            <span className="absolute right-2 top-2 text-[10px]  uppercase tracking-widest text-[#ff7d80]">
                                                                 Selected
                                                             </span>
                                                         ) : null}
@@ -1507,7 +1527,7 @@ export function AdminPointsPage() {
                                                                         <div className="actions-row">
                                                                             <button
                                                                                 type="button"
-                                                                                disabled={submission.status === 'APPROVED'}
+                                                                                disabled={submission.status !== 'PENDING'}
                                                                                 onClick={() => onApproveSubmission(submission)}
                                                                             >
                                                                                 Approve
@@ -1515,7 +1535,6 @@ export function AdminPointsPage() {
                                                                             <button
                                                                                 type="button"
                                                                                 className="outline-button"
-                                                                                disabled={submission.status === 'REJECTED'}
                                                                                 onClick={() => onRejectSubmission(submission)}
                                                                             >
                                                                                 Reject

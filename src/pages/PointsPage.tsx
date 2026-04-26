@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { api } from '../lib/api.legacy'
 import type { ActivityProgressItem, PointsSummary } from '../types/api'
 import { TechLoader } from '../components/TechLoader'
+import { LinkifiedText } from '../components/LinkifiedText'
 
 type SubmissionDialogState = {
     isOpen: boolean
@@ -174,22 +175,22 @@ export function PointsPage() {
     return (
         <section className="dashboard-shell stack px-5 md:px-0">
             <section className="space-y-2 border-b border-[#2a2a34] pb-4">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-[#b8b8c2]">Progress Center</p>
-                <h2 className="text-2xl font-bold leading-tight text-white md:text-3xl">Points and Activities</h2>
-                <p className="text-sm text-[#a9a9b4]">Track your competition participation and activity progress in one place.</p>
+                {/* <p className="text-[11px] uppercase tracking-[0.16em] text-[#b8b8c2]">Progress Center</p> */}
+                <h2 className="text-2xl leading-tight text-white md:text-3xl">Points and Activities</h2>
+                {/* <p className="text-sm text-[#a9a9b4]">Track your competition participation and activity progress in one place.</p> */}
             </section>
 
             <section className="grid grid-cols-[1.4fr_1fr] gap-3 border-b border-[#2f2f38] pb-4" aria-label="Points metrics">
                 <article>
                     <p className="text-[11px] uppercase tracking-[0.14em] text-[#b8b8c2]">Total Points</p>
                     <strong className="mt-1 block text-[2.1rem] leading-none text-[#ff2a2f] md:text-[2.5rem]">{summary?.totalPoints ?? 0}</strong>
-                    <p className="mt-1 text-xs text-[#a9a9b4]">Overall score across all tracked activities.</p>
+                    {/* <p className="mt-1 text-xs text-[#a9a9b4]">Overall score across all tracked activities.</p> */}
                 </article>
 
                 <article className="text-right">
-                    <p className="text-[11px] uppercase tracking-[0.14em] text-[#b8b8c2]">Activities</p>
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-[#b8b8c2]">Activities Completed</p>
                     <strong className="mt-1 block text-[1.5rem] leading-none text-white md:text-[1.8rem]">{sideMissionCompletedCount}</strong>
-                    <p className="mt-1 text-xs text-[#a9a9b4]">Completed</p>
+                    {/* <p className="mt-1 text-xs text-[#a9a9b4]">Completed</p> */}
                 </article>
             </section>
 
@@ -208,7 +209,7 @@ export function PointsPage() {
                         <div className="grid w-full grid-cols-2 gap-2 rounded-lg border border-[#2f2f39] bg-[#0f0f13] p-1.5 md:w-105 md:shrink-0" role="tablist" aria-label="Activity categories">
                             <button
                                 type="button"
-                                className={`rounded-md px-3 py-2 text-xs font-bold uppercase tracking-widest transition ${activeObjectiveTab === 'main'
+                                className={`rounded-md px-3 py-2 text-xs  uppercase tracking-widest transition ${activeObjectiveTab === 'main'
                                     ? 'bg-[#ff2a2f] text-white shadow-lg shadow-[#ff2a2f]/25'
                                     : 'text-[#c5c5cf] bg-[#26262e] hover:text-white'
                                     }`}
@@ -220,7 +221,7 @@ export function PointsPage() {
                             </button>
                             <button
                                 type="button"
-                                className={`rounded-md px-3 py-2 text-xs font-bold uppercase tracking-widest transition ${activeObjectiveTab === 'side'
+                                className={`rounded-md px-3 py-2 text-xs  uppercase tracking-widest transition ${activeObjectiveTab === 'side'
                                     ? 'bg-[#ff2a2f] text-white shadow-lg shadow-[#ff2a2f]/25'
                                     : 'text-[#c5c5cf] bg-[#26262e] hover:text-white'
                                     }`}
@@ -271,7 +272,9 @@ export function PointsPage() {
                                     >
                                         <div className="pr-3">
                                             <p className="stream-title">{item.name}</p>
-                                            <p className="objective-meta">{item.description || 'No description provided.'}</p>
+                                            <p className="objective-meta">
+                                                <LinkifiedText text={item.description || 'No description provided.'} />
+                                            </p>
                                         </div>
                                         <div className="mt-4 flex items-end justify-between gap-3">
                                             <div className="space-y-1">
@@ -310,7 +313,9 @@ export function PointsPage() {
                                     >
                                         <div className="pr-3">
                                             <p className="stream-title">{item.name}</p>
-                                            <p className="objective-meta">{item.description || 'No description provided.'}</p>
+                                            <p className="objective-meta">
+                                                <LinkifiedText text={item.description || 'No description provided.'} />
+                                            </p>
                                         </div>
                                         <div className="mt-4 flex items-end justify-between gap-3">
                                             <div className="space-y-1">
@@ -336,8 +341,10 @@ export function PointsPage() {
             {selectedActivity ? (
                 <div className="admin-dialog-backdrop" role="presentation" onClick={closeActivityDialog}>
                     <div className="admin-dialog" role="dialog" aria-live="polite" onClick={(event) => event.stopPropagation()}>
-                        <h3>{selectedActivity.name}</h3>
-                        <p className="muted tiny">{selectedActivity.description || 'No description'}</p>
+                        <h3 className="font-bold text-white">{selectedActivity.name}</h3>
+                        <p className="muted tiny">
+                            <LinkifiedText text={selectedActivity.description || 'No description'} />
+                        </p>
                         <div className="data-list compact">
                             <div>
                                 <dt>Points</dt>

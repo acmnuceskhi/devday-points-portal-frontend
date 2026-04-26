@@ -10,6 +10,7 @@ import { TechLoader } from '../components/TechLoader';
 
 export function DashboardPage() {
   const { participant, accessToken } = useAuth();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [competitions, setCompetitions] = useState<ParticipantCompetition[]>([]);
   const [loadingCompetitions, setLoadingCompetitions] = useState(true);
   const [competitionsError, setCompetitionsError] = useState('');
@@ -99,15 +100,38 @@ export function DashboardPage() {
       <div className="dashboard-export-frame">
         <div className="participant-main-grid">
           <aside className="dashboard-panel profile-panel">
-            <h3 className="section-heading">Your Profile</h3>
-            <dl className="space-y-3">
-              {profileDetails.map((detail) => (
-                <div key={detail.label} className="profile-line flex items-center justify-between gap-4">
-                  <dt className="text-sm font-semibold text-[#ff2a2f]">{detail.label}</dt>
-                  <dd className="text-white text-right">{detail.value || '-'}</dd>
-                </div>
-              ))}
-            </dl>
+            <h3 className="section-heading profile-dropdown-heading">
+              <button
+                type="button"
+                className="profile-dropdown-toggle"
+                onClick={() => setIsProfileOpen((current) => !current)}
+                aria-expanded={isProfileOpen}
+                aria-controls="profile-details"
+              >
+                <span>Your Profile</span>
+                <span className={`profile-dropdown-icon ${isProfileOpen ? 'is-open' : ''}`} aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+                    <path
+                      d="M6 9.5 12 15.5 18 9.5"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+              </button>
+            </h3>
+            <div id="profile-details" className={`profile-dropdown-content ${isProfileOpen ? 'is-open' : ''}`}>
+              <dl className="space-y-3">
+                {profileDetails.map((detail) => (
+                  <div key={detail.label} className="profile-line flex items-center justify-between gap-0">
+                    <dt className="text-sm text-[#ff2a2f] tracking-[0.06em]">{detail.label}</dt>
+                    <dd className="text-white text-right tracking-wide text-sm">{detail.value || '-'}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
           </aside>
 
           <section className="dashboard-panel mission-stream">

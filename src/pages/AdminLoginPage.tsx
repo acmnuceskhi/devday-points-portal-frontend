@@ -58,6 +58,7 @@ export function AdminLoginPage() {
                             type="password"
                             value={password}
                             onChange={(event) => setPassword(event.target.value)}
+                            required
                             autoComplete="current-password"
                         />
                     </label>

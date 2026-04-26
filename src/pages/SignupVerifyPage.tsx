@@ -44,7 +44,7 @@ export function SignupVerifyPage() {
       <section className="mx-auto w-full max-w-xl space-y-6 rounded-xl border border-[#2f2f3a] bg-[#0e0e14]/90 p-5 shadow-[0_16px_40px_rgba(0,0,0,0.35)] md:p-7">
         <div className="space-y-2 border-b border-[#2a2a34] pb-4">
           <p className="text-[11px] uppercase tracking-[0.16em] text-[#b8b8c2]">Devday 2026 | Account Verification</p>
-          <h1 className="text-2xl font-bold leading-tight text-white md:text-3xl">Complete Email Verification</h1>
+          <h1 className="text-2xl  leading-tight text-white md:text-3xl">Complete Email Verification</h1>
           <p className="text-sm text-[#a9a9b4]">Use the verification link from your email to complete account setup.</p>
         </div>
 
@@ -90,7 +90,7 @@ export function SignupVerifyPage() {
             />
           </label>
 
-          <button type="submit" disabled={isSubmitting || !token} className="w-full rounded-md bg-[#ff2a2f] px-4 py-3 text-sm font-bold uppercase tracking-widest text-white transition hover:bg-[#ea1e24] disabled:cursor-not-allowed disabled:opacity-70">
+          <button type="submit" disabled={isSubmitting || !token} className="w-full rounded-md bg-[#ff2a2f] px-4 py-3 text-sm  uppercase tracking-widest text-white transition hover:bg-[#ea1e24] disabled:cursor-not-allowed disabled:opacity-70">
             {isSubmitting ? 'Verifying...' : 'Verify and Continue'}
           </button>
         </form>

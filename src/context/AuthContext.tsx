@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { api } from '../lib/api'
+import { SESSION_EXPIRED_EVENT, api } from '../lib/api'
+import type { SessionExpiredDetail } from '../lib/api'
 import {
   clearStoredAccessToken,
   getStoredAccessToken,
@@ -64,12 +65,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setParticipant(result.participant)
   }
 
-  const logout = () => {
+  const logout = useCallback(() => {
     clearStoredAccessToken()
     setAccessToken(null)
     setUser(null)
     setParticipant(null)
-  }
+  }, [])
+
+  useEffect(() => {
+    const onSessionExpired = (event: Event) => {
+      const customEvent = event as CustomEvent<SessionExpiredDetail>
+      if (customEvent.detail?.scope !== 'participant') {
+        return
+      }
+
+      logout()
+    }
+
+    window.addEventListener(SESSION_EXPIRED_EVENT, onSessionExpired)
+    return () => {
+      window.removeEventListener(SESSION_EXPIRED_EVENT, onSessionExpired)
+    }
+  }, [logout])
 
   const value = useMemo<AuthContextValue>(
     () => ({

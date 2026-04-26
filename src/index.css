@@ -36,7 +36,7 @@
     h2,
     h3,
     h4 {
-        @apply m-0 font-bold tracking-[0.06em];
+        @apply m-0 tracking-[0.06em];
         font-family: 'Space Mono', monospace;
     }
 
@@ -130,7 +130,7 @@
 
     button,
     .link-button {
-        @apply inline-flex items-center justify-center rounded-md border border-transparent bg-[#ff2a2f] px-4 py-2 text-sm font-bold tracking-[0.06em] text-white transition duration-200 hover:bg-[#eb1f24] disabled:cursor-progress disabled:opacity-60;
+        @apply inline-flex items-center justify-center rounded-md border border-transparent bg-[#ff2a2f] px-4 py-2 text-sm  tracking-[0.06em] text-white transition duration-200 hover:bg-[#eb1f24] disabled:cursor-progress disabled:opacity-60;
         font-family: 'Space Mono', monospace;
     }
 
@@ -140,7 +140,7 @@
     }
 
     .outline-button {
-        @apply inline-flex w-fit items-center justify-center rounded-md border border-[#3d3d44] bg-[#131317] px-3 py-2 text-sm font-bold tracking-[0.06em] text-[#efeff4] no-underline transition duration-200 hover:bg-[#1b1b20];
+        @apply inline-flex w-fit items-center justify-center rounded-md border border-[#3d3d44] bg-[#131317] px-3 py-2 text-sm  tracking-[0.06em] text-[#efeff4] no-underline transition duration-200 hover:bg-[#1b1b20];
         font-family: 'Space Mono', monospace;
     }
 
@@ -174,7 +174,7 @@
 
     .portal-title-main,
     .admin-title-main {
-        @apply text-2xl font-bold uppercase tracking-[0.12em] text-white md:text-4xl;
+        @apply text-2xl  uppercase tracking-[0.12em] text-white md:text-4xl;
         line-height: 1.05;
     }
 
@@ -187,7 +187,7 @@
     }
 
     .tab {
-        @apply rounded-md px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-[#cdcdcd] no-underline transition hover:bg-[#202027] hover:text-white;
+        @apply rounded-md px-3 py-2 text-xs uppercase tracking-[0.14em] text-[#cdcdcd] no-underline transition hover:bg-[#202027] hover:text-white;
     }
 
     .tab.active {
@@ -207,7 +207,7 @@
     }
 
     .snapshot-button {
-        @apply inline-flex w-full items-center justify-center gap-2 rounded-md border border-[#3d3d44] bg-[#131317] px-4 py-2 text-sm font-bold tracking-[0.06em] text-[#efeff4] transition duration-200 hover:bg-[#1b1b20] disabled:cursor-progress disabled:opacity-60 md:ml-auto md:w-auto;
+        @apply inline-flex w-full items-center justify-center gap-2 rounded-md border border-[#3d3d44] bg-[#131317] px-4 py-2 text-sm  tracking-[0.06em] text-[#efeff4] transition duration-200 hover:bg-[#1b1b20] disabled:cursor-progress disabled:opacity-60 md:ml-auto md:w-auto;
         font-family: 'Space Mono', monospace;
     }
 
@@ -220,6 +220,7 @@
         width: min(90%, 1680px);
         margin-inline: auto;
         padding-inline: clamp(12px, 2.2vw, 28px);
+        padding-bottom: 2rem;
     }
 
     .stack {
@@ -269,7 +270,7 @@
     }
 
     .data-list dd {
-        @apply m-0 text-sm font-bold text-white;
+        @apply m-0 text-sm  text-white;
     }
 
     .actions-row {
@@ -277,7 +278,7 @@
     }
 
     .status {
-        @apply text-sm font-bold text-[#ff2a2f];
+        @apply text-sm text-[#ff2a2f];
     }
 
     .toggle-row {
@@ -355,7 +356,7 @@
     }
 
     .admin-subtab {
-        @apply rounded-md border border-transparent bg-transparent px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#cdcdcd] transition hover:bg-[#24242b] hover:text-white;
+        @apply rounded-md border border-transparent bg-transparent px-3 py-2 text-xs  uppercase tracking-[0.12em] text-[#cdcdcd] transition hover:bg-[#24242b] hover:text-white;
     }
 
     .admin-subtab.active {
@@ -387,7 +388,7 @@
     }
 
     .selection-badge {
-        @apply rounded-full bg-[#ff2a2f] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-white;
+        @apply rounded-full bg-[#ff2a2f] px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-white;
     }
 
     .competition-cards-grid {
@@ -404,12 +405,12 @@
     }
 
     .competition-card-head h4 {
-        @apply text-base font-bold text-white;
+        @apply text-base  text-white;
     }
 
     .competition-status-pill,
     .competition-role-pill {
-        @apply rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em];
+        @apply rounded-full px-2 py-1 text-[10px]  uppercase tracking-[0.1em];
     }
 
     .competition-status-pill {
@@ -499,7 +500,7 @@
     }
 
     .metric-block strong {
-        @apply text-base font-bold text-white md:text-lg;
+        @apply text-base  text-white md:text-lg;
         font-family: 'Space Mono', monospace;
     }
 
@@ -549,7 +550,7 @@
     }
 
     .dashboard-editorial .dashboard-hero-title {
-        font-size: clamp(2rem, 4.3vw, 3.2rem);
+        font-size: clamp(1.7rem, 4.3vw, 2.8rem);
         letter-spacing: 0.01em;
     }
 
@@ -608,7 +609,7 @@
     }
 
     .dashboard-editorial .profile-line {
-        padding: 0.65rem 0;
+        padding: 0.5rem 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
 
@@ -651,7 +652,7 @@
     }
 
     .mission-title {
-        @apply font-bold text-white;
+        @apply  text-white;
     }
 
     .mission-team,
@@ -660,7 +661,7 @@
     }
 
     .competition-status-pill {
-        @apply inline-flex w-fit items-center justify-center rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em];
+        @apply inline-flex w-fit items-center justify-center rounded-full px-2 py-1 text-[10px]  uppercase tracking-[0.1em];
         background: rgba(255, 42, 47, 0.2);
         color: #ff2a2f;
         text-align: center;
@@ -685,7 +686,7 @@
     }
 
     .main-heading {
-        @apply text-[2.05rem] leading-[1.02] text-white md:text-[2.9rem];
+        @apply text-[1.7rem] leading-[1.02] text-white md:text-[2.3rem];
         letter-spacing: 0.025em;
     }
 
@@ -697,6 +698,51 @@
     .section-heading {
         @apply text-[2rem] leading-tight text-white md:text-[2rem] mt-2 mb-1;
         letter-spacing: 0.015em;
+    }
+
+    .profile-dropdown-heading {
+        margin-bottom: 0.4rem;
+    }
+
+    .profile-dropdown-toggle {
+        width: 100%;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        letter-spacing: inherit;
+        text-align: left;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .profile-dropdown-toggle:hover {
+        background: transparent;
+        color: inherit;
+        transform: none;
+    }
+
+    .profile-dropdown-toggle:focus-visible {
+        outline: 2px solid rgba(255, 42, 47, 0.65);
+        outline-offset: 4px;
+    }
+
+    .profile-dropdown-icon {
+        display: none;
+        line-height: 1;
+        font-size: 1rem;
+        transform: rotate(0deg);
+        transition: transform 180ms ease;
+    }
+
+    .profile-dropdown-icon.is-open {
+        transform: rotate(180deg);
+    }
+
+    .profile-dropdown-content {
+        display: block;
     }
 
     .panel-title {
@@ -719,7 +765,7 @@
     }
 
     .stream-title {
-        @apply font-bold text-white;
+        @apply  text-white;
     }
 
     .stream-subline {
@@ -740,7 +786,7 @@
     }
 
     .objective-tab {
-        @apply rounded-md border border-transparent bg-transparent px-3 py-1.5 text-xs font-bold uppercase tracking-[0.1em] text-[#c5c5cf] transition hover:bg-[#26262e] hover:text-white;
+        @apply rounded-md border border-transparent bg-transparent px-3 py-1.5 text-xs  uppercase tracking-[0.1em] text-[#c5c5cf] transition hover:bg-[#26262e] hover:text-white;
     }
 
     .objective-tab.active {
@@ -826,7 +872,7 @@
     }
 
     .profile-grid dd {
-        @apply m-0 text-sm font-bold text-white;
+        @apply m-0 text-sm  text-white;
     }
 
     .leaderboard-inline-rank {
@@ -861,7 +907,7 @@
     }
 
     .rank-number {
-        @apply text-sm font-bold text-[#d8d8df];
+        @apply text-sm  text-[#d8d8df];
         font-family: 'Space Mono', monospace;
     }
 
@@ -890,13 +936,34 @@
             border-right: 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             padding-right: 0;
-            padding-bottom: 1.2rem;
+            padding-bottom: 0.55rem;
+        }
+
+        .profile-dropdown-toggle {
+            cursor: pointer;
+        }
+
+        .profile-dropdown-icon {
+            display: inline-block;
+        }
+
+        .profile-dropdown-content {
+            display: none;
+        }
+
+        .profile-dropdown-content.is-open {
+            display: block;
         }
 
         .dashboard-editorial .mission-stream {
             padding-left: 0;
             padding-right: 0;
-            padding-top: 0.8rem;
+            padding-top: 0.35rem;
+        }
+
+        .dashboard-editorial .section-heading {
+            font-size: 1.6rem;
+            line-height: 1.12;
         }
 
         .dashboard-editorial .dashboard-hero-head {
@@ -905,7 +972,7 @@
         }
 
         .dashboard-editorial .dashboard-hero-title {
-            font-size: clamp(1.7rem, 9vw, 2.35rem);
+            font-size: clamp(1.25rem, 9vw, 2.35rem);
             line-height: 1.02;
         }
 
@@ -934,7 +1001,7 @@
     }
 
     .competition-meta-list dd {
-        @apply m-0 text-sm font-bold text-white;
+        @apply m-0 text-sm  text-white;
     }
 
     .competition-card-actions {
@@ -1061,6 +1128,7 @@
         width: 100%;
         margin-inline: 0;
         padding-inline: 10px;
+        padding-bottom: 2rem;
     }
 
     .dashboard-shell .section-head {

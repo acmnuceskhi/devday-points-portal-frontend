@@ -16,10 +16,12 @@ export function SignupVerifyPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
 
+  const hasToken = Boolean(token)
+
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    if (!token) {
+    if (!hasToken) {
       setMessage('Verification token is missing. Open the latest signup link from your email.')
       return
     }
@@ -37,6 +39,26 @@ export function SignupVerifyPage() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (!hasToken) {
+    return (
+      <div className="auth-page px-5 md:px-0">
+        <section className="mx-auto w-full max-w-xl space-y-6 rounded-xl border border-[#2f2f3a] bg-[#0e0e14]/90 p-5 shadow-[0_16px_40px_rgba(0,0,0,0.35)] md:p-7">
+          <div className="space-y-2 border-b border-[#2a2a34] pb-4">
+            <p className="text-[11px] uppercase tracking-[0.16em] text-[#b8b8c2]">Devday 2026 | Account Verification</p>
+            <h1 className="text-2xl  leading-tight text-white md:text-3xl">Verification Link Required</h1>
+            <p className="text-sm text-[#a9a9b4]">Open the verification link from your email to continue account setup.</p>
+          </div>
+
+          <p className="status">Check your email for the verification link.</p>
+
+          <p className="text-xs text-[#a9a9b4]">
+            Verification link expired? <Link to="/signup" className="text-[#ff7d80] hover:text-[#ff2a2f]">Request a new link</Link>
+          </p>
+        </section>
+      </div>
+    )
   }
 
   return (
@@ -90,14 +112,10 @@ export function SignupVerifyPage() {
             />
           </label>
 
-          <button type="submit" disabled={isSubmitting || !token} className="w-full rounded-md bg-[#ff2a2f] px-4 py-3 text-sm  uppercase tracking-widest text-white transition hover:bg-[#ea1e24] disabled:cursor-not-allowed disabled:opacity-70">
+          <button type="submit" disabled={isSubmitting} className="w-full rounded-md bg-[#ff2a2f] px-4 py-3 text-sm  uppercase tracking-widest text-white transition hover:bg-[#ea1e24] disabled:cursor-not-allowed disabled:opacity-70">
             {isSubmitting ? 'Verifying...' : 'Verify and Continue'}
           </button>
         </form>
-
-        {!token ? (
-          <p className="status">Open the signup verification link from your email to continue.</p>
-        ) : null}
 
         {message ? <p className="status">{message}</p> : null}
 

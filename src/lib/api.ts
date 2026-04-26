@@ -46,15 +46,6 @@ function emitSessionExpired(detail: SessionExpiredDetail) {
   window.dispatchEvent(new CustomEvent<SessionExpiredDetail>(SESSION_EXPIRED_EVENT, { detail }))
 }
 
-type AdminSubmissionReviewResponse = {
-  submissionId: string
-  decision: 'APPROVED' | 'REJECTED'
-  noOp?: boolean
-  previousStatus?: 'PENDING' | 'APPROVED' | 'REJECTED'
-  completionReversed?: boolean
-  pointsRemoved?: number
-}
-
 export class ApiRequestError extends Error {
   code: string | null
   status: number | null

@@ -164,6 +164,7 @@ export type ActivityProgressItem = {
   description: string | null
   points: number
   isActive: boolean
+  activityCategory?: 'COMPETITION' | 'MINIGAME' | 'REGULAR'
   hasCorrectAnswer: boolean
   activityTypeCode: 'MANUAL' | 'LINK_BASED' | string
   completionId: string | null
@@ -249,6 +250,18 @@ export type CompetitionActivityPointsConfig = {
   key: string
   globalDefaultPoints: number | null
   overrides: CompetitionPointsOverride[]
+}
+
+export type MinigamePointsOverride = {
+  minigameId: string
+  minigameName: string
+  points: number | null
+}
+
+export type MinigameActivityPointsConfig = {
+  key: string
+  globalDefaultPoints: number | null
+  overrides: MinigamePointsOverride[]
 }
 
 export type MarkCompletionPayload = {

@@ -12,6 +12,20 @@ type SubmissionDialogState = {
     detail: string
 }
 
+function isCompetitionParticipation(item: ActivityProgressItem) {
+    if (item.activityCategory === 'COMPETITION') return true
+    return item.code.startsWith('COMP_') && item.code.endsWith('_PARTICIPATION')
+}
+
+function isMinigameParticipation(item: ActivityProgressItem) {
+    if (item.activityCategory === 'MINIGAME') return true
+    return item.code.startsWith('MINIGAME_') && item.code.endsWith('_PARTICIPATION')
+}
+
+function isParticipationObjective(item: ActivityProgressItem) {
+    return isCompetitionParticipation(item) || isMinigameParticipation(item)
+}
+
 export function PointsPage() {
     const { accessToken } = useAuth()
     const [summary, setSummary] = useState<PointsSummary | null>(null)
@@ -21,7 +35,7 @@ export function PointsPage() {
     const [submissionLinks, setSubmissionLinks] = useState<Record<string, string>>({})
     const [submissionTexts, setSubmissionTexts] = useState<Record<string, string>>({})
     const [activitySearch, setActivitySearch] = useState('')
-    const [activeObjectiveTab, setActiveObjectiveTab] = useState<'main' | 'side'>('side')
+    const [activeObjectiveTab, setActiveObjectiveTab] = useState<'competitions' | 'minigames' | 'activities'>('activities')
     const [showCompletedMainOnly, setShowCompletedMainOnly] = useState(true)
     const [submittingActivityId, setSubmittingActivityId] = useState<string | null>(null)
     const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null)
@@ -60,7 +74,7 @@ export function PointsPage() {
     }, [accessToken])
 
     const sideMissionCompletedCount = useMemo(
-        () => activities.filter((item) => !item.code.endsWith('_PARTICIPATION') && item.isCompleted).length,
+        () => activities.filter((item) => !isParticipationObjective(item) && item.isCompleted).length,
         [activities],
     )
 
@@ -83,19 +97,29 @@ export function PointsPage() {
         })
     }, [activities, activitySearch])
 
-    const mainObjectives = useMemo(
-        () => filteredActivities.filter((item) => item.code.endsWith('_PARTICIPATION')),
+    const competitionObjectives = useMemo(
+        () => filteredActivities.filter((item) => isCompetitionParticipation(item)),
+        [filteredActivities],
+    )
+
+    const minigameObjectives = useMemo(
+        () => filteredActivities.filter((item) => isMinigameParticipation(item)),
         [filteredActivities],
     )
 
     const sideObjectives = useMemo(
-        () => filteredActivities.filter((item) => !item.code.endsWith('_PARTICIPATION')),
+        () => filteredActivities.filter((item) => !isCompetitionParticipation(item) && !isMinigameParticipation(item)),
         [filteredActivities],
     )
 
-    const displayedMainObjectives = useMemo(
-        () => (showCompletedMainOnly ? mainObjectives.filter((item) => item.isCompleted) : mainObjectives),
-        [mainObjectives, showCompletedMainOnly],
+    const displayedCompetitionObjectives = useMemo(
+        () => (showCompletedMainOnly ? competitionObjectives.filter((item) => item.isCompleted) : competitionObjectives),
+        [competitionObjectives, showCompletedMainOnly],
+    )
+
+    const displayedMinigameObjectives = useMemo(
+        () => (showCompletedMainOnly ? minigameObjectives.filter((item) => item.isCompleted) : minigameObjectives),
+        [minigameObjectives, showCompletedMainOnly],
     )
 
     const onSubmitActivity = async (event: FormEvent, item: ActivityProgressItem) => {
@@ -177,6 +201,7 @@ export function PointsPage() {
                 <p className="text-[11px] uppercase tracking-[0.16em] text-[#b8b8c2]">Progress Center</p>
                 <h2 className="text-2xl font-bold leading-tight text-white md:text-3xl">Points and Activities</h2>
                 <p className="text-sm text-[#a9a9b4]">Track your competition participation and activity progress in one place.</p>
+                <p className="text-xs text-[#8f8f9a]">Participation includes competition and minigame milestones.</p>
             </section>
 
             <section className="grid grid-cols-[1.4fr_1fr] gap-3 border-b border-[#2f2f38] pb-4" aria-label="Points metrics">
@@ -205,28 +230,40 @@ export function PointsPage() {
                             />
                         </div>
 
-                        <div className="grid w-full grid-cols-2 gap-2 rounded-lg border border-[#2f2f39] bg-[#0f0f13] p-1.5 md:w-105 md:shrink-0" role="tablist" aria-label="Activity categories">
+                        <div className="grid w-full grid-cols-3 gap-2 rounded-lg border border-[#2f2f39] bg-[#0f0f13] p-1.5 md:w-120 md:shrink-0" role="tablist" aria-label="Activity categories">
                             <button
                                 type="button"
-                                className={`rounded-md px-3 py-2 text-xs font-bold uppercase tracking-widest transition ${activeObjectiveTab === 'main'
+                                className={`rounded-md px-3 py-2 text-xs font-bold uppercase tracking-widest transition ${activeObjectiveTab === 'competitions'
                                     ? 'bg-[#ff2a2f] text-white shadow-lg shadow-[#ff2a2f]/25'
                                     : 'text-[#c5c5cf] bg-[#26262e] hover:text-white'
                                     }`}
                                 role="tab"
-                                aria-selected={activeObjectiveTab === 'main'}
-                                onClick={() => setActiveObjectiveTab('main')}
+                                aria-selected={activeObjectiveTab === 'competitions'}
+                                onClick={() => setActiveObjectiveTab('competitions')}
                             >
-                                Competitions ({mainObjectives.length})
+                                Competitions ({competitionObjectives.length})
                             </button>
                             <button
                                 type="button"
-                                className={`rounded-md px-3 py-2 text-xs font-bold uppercase tracking-widest transition ${activeObjectiveTab === 'side'
+                                className={`rounded-md px-3 py-2 text-xs font-bold uppercase tracking-widest transition ${activeObjectiveTab === 'minigames'
                                     ? 'bg-[#ff2a2f] text-white shadow-lg shadow-[#ff2a2f]/25'
                                     : 'text-[#c5c5cf] bg-[#26262e] hover:text-white'
                                     }`}
                                 role="tab"
-                                aria-selected={activeObjectiveTab === 'side'}
-                                onClick={() => setActiveObjectiveTab('side')}
+                                aria-selected={activeObjectiveTab === 'minigames'}
+                                onClick={() => setActiveObjectiveTab('minigames')}
+                            >
+                                Minigames ({minigameObjectives.length})
+                            </button>
+                            <button
+                                type="button"
+                                className={`rounded-md px-3 py-2 text-xs font-bold uppercase tracking-widest transition ${activeObjectiveTab === 'activities'
+                                    ? 'bg-[#ff2a2f] text-white shadow-lg shadow-[#ff2a2f]/25'
+                                    : 'text-[#c5c5cf] bg-[#26262e] hover:text-white'
+                                    }`}
+                                role="tab"
+                                aria-selected={activeObjectiveTab === 'activities'}
+                                onClick={() => setActiveObjectiveTab('activities')}
                             >
                                 Activities ({sideObjectives.length})
                             </button>
@@ -234,28 +271,30 @@ export function PointsPage() {
                     </div>
 
                     <p className="text-center text-xs text-[#a9a9b4] md:text-left">
-                        {activeObjectiveTab === 'main'
+                        {activeObjectiveTab === 'competitions'
                             ? 'Core competition participation checkpoints.'
-                            : 'Optional and bonus activities.'}
+                            : activeObjectiveTab === 'minigames'
+                                ? 'Minigame participation milestones.'
+                                : 'Optional and bonus activities.'}
                     </p>
                 </div>
 
                 <div className="stack">
 
-                    {activeObjectiveTab === 'main' ? (
+                    {activeObjectiveTab !== 'activities' ? (
                         <label className="toggle-row">
                             <input
                                 type="checkbox"
                                 checked={showCompletedMainOnly}
                                 onChange={(event) => setShowCompletedMainOnly(event.target.checked)}
                             />
-                            Participated competitions only
+                            Show completed only
                         </label>
                     ) : null}
 
-                    {activeObjectiveTab === 'main' ? (
+                    {activeObjectiveTab === 'competitions' ? (
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 auto-rows-fr">
-                            {displayedMainObjectives.map((item) => {
+                            {displayedCompetitionObjectives.map((item) => {
                                 const statusLabel = item.isCompleted
                                     ? 'Completed'
                                     : item.submissionStatus
@@ -271,6 +310,7 @@ export function PointsPage() {
                                     >
                                         <div className="pr-3">
                                             <p className="stream-title">{item.name}</p>
+                                            <p className="objective-meta">Competition Participation</p>
                                             <p className="objective-meta">{item.description || 'No description provided.'}</p>
                                         </div>
                                         <div className="mt-4 flex items-end justify-between gap-3">
@@ -288,11 +328,51 @@ export function PointsPage() {
                                     </article>
                                 )
                             })}
-                            {!displayedMainObjectives.length ? <p className="muted">No competitions.</p> : null}
+                            {!displayedCompetitionObjectives.length ? <p className="muted">No competition participation activities.</p> : null}
                         </div>
                     ) : null}
 
-                    {activeObjectiveTab === 'side' ? (
+                    {activeObjectiveTab === 'minigames' ? (
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 auto-rows-fr">
+                            {displayedMinigameObjectives.map((item) => {
+                                const statusLabel = item.isCompleted
+                                    ? 'Completed'
+                                    : item.submissionStatus
+                                        ? `Submitted (${item.submissionStatus})`
+                                        : item.isActive
+                                            ? 'Pending'
+                                            : 'Inactive'
+
+                                return (
+                                    <article
+                                        key={item.id}
+                                        className="relative flex min-h-55 flex-col justify-between overflow-hidden rounded-lg border border-[#343441] bg-transparent p-4 transition hover:border-[#6a86d8]"
+                                    >
+                                        <div className="pr-3">
+                                            <p className="stream-title">{item.name}</p>
+                                            <p className="objective-meta">Minigame Participation</p>
+                                            <p className="objective-meta">{item.description || 'No description provided.'}</p>
+                                        </div>
+                                        <div className="mt-4 flex items-end justify-between gap-3">
+                                            <div className="space-y-1">
+                                                <p className="objective-meta">Points: {item.points}</p>
+                                                <span className={`competition-status-pill ${item.isCompleted ? 'is-verified' : ''}`}>
+                                                    {statusLabel}
+                                                </span>
+                                            </div>
+                                            <button type="button" className="outline-button" onClick={() => openActivityDialog(item.id)}>
+                                                Details
+                                            </button>
+                                        </div>
+                                        <span className="pointer-events-none absolute right-0 top-3 h-[calc(100%-1.5rem)] w-0.75 rounded-full bg-[#7b8bff]" aria-hidden="true" />
+                                    </article>
+                                )
+                            })}
+                            {!displayedMinigameObjectives.length ? <p className="muted">No minigame participation activities.</p> : null}
+                        </div>
+                    ) : null}
+
+                    {activeObjectiveTab === 'activities' ? (
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 auto-rows-fr">
                             {sideObjectives.map((item) => {
                                 const statusLabel = item.isCompleted

@@ -7,6 +7,7 @@ import type {
   AdminParticipantDetail,
   ActivityType,
   CompetitionActivityPointsConfig,
+  MinigameActivityPointsConfig,
   ActivityProgressItem,
   AdjustPointsPayload,
   Competition,
@@ -246,6 +247,31 @@ export const api = {
   },
   deleteAdminCompetitionActivityPointsOverride(accessToken: string, competitionId: string) {
     return request<CompetitionActivityPointsConfig>(`/points/admin/config/competition-activity-points/overrides/${competitionId}`, {
+      method: 'DELETE',
+      accessToken,
+    })
+  },
+  getAdminMinigameActivityPointsConfig(accessToken: string) {
+    return request<MinigameActivityPointsConfig>('/points/admin/config/minigame-activity-points', {
+      accessToken,
+    })
+  },
+  updateAdminMinigameActivityPointsDefault(accessToken: string, points: number) {
+    return request<MinigameActivityPointsConfig>('/points/admin/config/minigame-activity-points/default', {
+      method: 'PATCH',
+      accessToken,
+      body: { points },
+    })
+  },
+  upsertAdminMinigameActivityPointsOverride(accessToken: string, minigameId: string, points: number) {
+    return request<MinigameActivityPointsConfig>(`/points/admin/config/minigame-activity-points/overrides/${minigameId}`, {
+      method: 'PUT',
+      accessToken,
+      body: { points },
+    })
+  },
+  deleteAdminMinigameActivityPointsOverride(accessToken: string, minigameId: string) {
+    return request<MinigameActivityPointsConfig>(`/points/admin/config/minigame-activity-points/overrides/${minigameId}`, {
       method: 'DELETE',
       accessToken,
     })

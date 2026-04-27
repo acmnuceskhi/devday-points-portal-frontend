@@ -10,6 +10,7 @@ import type {
     AdminParticipantDetail,
     Competition,
     CompetitionActivityPointsConfig,
+    MinigameActivityPointsConfig,
     PointsAuditLog,
     PointsLeaderboardItem,
     RankingItem,
@@ -26,7 +27,7 @@ type ParticipantWorkflowTab =
     | 'completed-activities'
 
 type ActivitiesTab = 'activity-management' | 'review-submissions' | 'points-config'
-type ActivityManagementTab = 'competitions' | 'activities'
+type ActivityManagementTab = 'competitions' | 'minigames' | 'activities'
 
 type ParticipantLookup = {
     participantId: string
@@ -42,6 +43,14 @@ type ActionDialogState = {
 }
 
 const PARTICIPANT_LOOKUP_LIMIT = 100
+
+function isCompetitionParticipation(code: string) {
+    return code.startsWith('COMP_') && code.endsWith('_PARTICIPATION')
+}
+
+function isMinigameParticipation(code: string) {
+    return code.startsWith('MINIGAME_') && code.endsWith('_PARTICIPATION')
+}
 
 const makeActivityCodePreview = (name: string) => {
     const base = name
@@ -114,6 +123,9 @@ export function AdminPointsPage() {
     const [competitionPointsConfig, setCompetitionPointsConfig] = useState<CompetitionActivityPointsConfig | null>(null)
     const [competitionPointsDefaultInput, setCompetitionPointsDefaultInput] = useState('0')
     const [competitionOverrideInputs, setCompetitionOverrideInputs] = useState<Record<string, string>>({})
+    const [minigamePointsConfig, setMinigamePointsConfig] = useState<MinigameActivityPointsConfig | null>(null)
+    const [minigamePointsDefaultInput, setMinigamePointsDefaultInput] = useState('0')
+    const [minigameOverrideInputs, setMinigameOverrideInputs] = useState<Record<string, string>>({})
 
     const openActionDialog = (title: string, detail = 'Please wait while we process your request...') => {
         setDialogState({ isOpen: true, title, status: 'loading', detail })
@@ -142,6 +154,16 @@ export function AdminPointsPage() {
         setCompetitionOverrideInputs(nextOverrides)
     }
 
+    const applyMinigamePointsConfig = (config: MinigameActivityPointsConfig) => {
+        setMinigamePointsConfig(config)
+        setMinigamePointsDefaultInput(String(config.globalDefaultPoints ?? 0))
+        const nextOverrides: Record<string, string> = {}
+        for (const item of config.overrides) {
+            nextOverrides[item.minigameId] = String(item.points ?? '')
+        }
+        setMinigameOverrideInputs(nextOverrides)
+    }
+
     const toParticipantLookup = (items: Array<RankingItem | PointsLeaderboardItem>): ParticipantLookup[] => {
         const lookup = new Map<string, ParticipantLookup>()
         for (const item of items) {
@@ -160,7 +182,7 @@ export function AdminPointsPage() {
     const refreshGlobalData = async () => {
         if (!accessToken) return
 
-        const [activityData, kindsData, auditData, rankingsResult, leaderboardResult, competitionData, pointsConfig] = await Promise.all([
+        const [activityData, kindsData, auditData, rankingsResult, leaderboardResult, competitionData, pointsConfig, minigamePoints] = await Promise.all([
             api.getAdminActivityTypes(accessToken, true),
             api.getAdminActivityKinds(accessToken),
             api.getAdminAuditLogs(accessToken, 30, 0),
@@ -168,6 +190,7 @@ export function AdminPointsPage() {
             api.getPointsLeaderboard(PARTICIPANT_LOOKUP_LIMIT, 0),
             api.getCompetitions(true),
             api.getAdminCompetitionActivityPointsConfig(accessToken),
+            api.getAdminMinigameActivityPointsConfig(accessToken),
         ])
 
         setActivities(activityData)
@@ -176,6 +199,7 @@ export function AdminPointsPage() {
         setCompetitionList(competitionData)
         setParticipants(toParticipantLookup([...rankingsResult.items, ...leaderboardResult.items]))
         applyCompetitionPointsConfig(pointsConfig)
+        applyMinigamePointsConfig(minigamePoints)
 
         if (!newActivityTypeId && kindsData[0]) {
             setNewActivityTypeId(kindsData[0].id)
@@ -407,18 +431,31 @@ export function AdminPointsPage() {
     }, [activities, activitySearch])
 
     const competitionActivities = useMemo(
-        () => filteredActivities.filter((item) => item.code.endsWith('_PARTICIPATION')),
+        () => filteredActivities.filter((item) => isCompetitionParticipation(item.code)),
+        [filteredActivities],
+    )
+
+    const minigameActivities = useMemo(
+        () => filteredActivities.filter((item) => isMinigameParticipation(item.code)),
         [filteredActivities],
     )
 
     const regularActivities = useMemo(
-        () => filteredActivities.filter((item) => !item.code.endsWith('_PARTICIPATION')),
+        () =>
+            filteredActivities.filter(
+                (item) => !isCompetitionParticipation(item.code) && !isMinigameParticipation(item.code),
+            ),
         [filteredActivities],
     )
 
     const displayedActivities = useMemo(
-        () => (activeActivityManagementTab === 'competitions' ? competitionActivities : regularActivities),
-        [activeActivityManagementTab, competitionActivities, regularActivities],
+        () =>
+            activeActivityManagementTab === 'competitions'
+                ? competitionActivities
+                : activeActivityManagementTab === 'minigames'
+                    ? minigameActivities
+                    : regularActivities,
+        [activeActivityManagementTab, competitionActivities, minigameActivities, regularActivities],
     )
 
     const selectedNewActivityKind = useMemo(
@@ -664,6 +701,49 @@ export function AdminPointsPage() {
             const updated = await api.deleteAdminCompetitionActivityPointsOverride(accessToken, competitionId)
             applyCompetitionPointsConfig(updated)
             showActionSuccess('Override Cleared', 'Competition-specific override removed.')
+        } catch (error) {
+            showActionError('Could Not Clear Override', error instanceof Error ? error.message : 'Clear failed')
+        }
+    }
+
+    const onUpdateMinigameDefaultPoints = async (event: FormEvent) => {
+        event.preventDefault()
+        if (!accessToken) return
+
+        try {
+            openActionDialog('Updating Minigame Default Points')
+            const updated = await api.updateAdminMinigameActivityPointsDefault(accessToken, Number(minigamePointsDefaultInput))
+            applyMinigamePointsConfig(updated)
+            showActionSuccess('Configuration Updated', 'Global default minigame participation points updated.')
+        } catch (error) {
+            showActionError('Could Not Update Configuration', error instanceof Error ? error.message : 'Update failed')
+        }
+    }
+
+    const onSaveMinigameOverride = async (minigameId: string) => {
+        if (!accessToken) return
+
+        const value = minigameOverrideInputs[minigameId]
+        if (!value?.trim()) return
+
+        try {
+            openActionDialog('Updating Minigame Override')
+            const updated = await api.upsertAdminMinigameActivityPointsOverride(accessToken, minigameId, Number(value))
+            applyMinigamePointsConfig(updated)
+            showActionSuccess('Override Updated', 'Minigame-specific points override saved.')
+        } catch (error) {
+            showActionError('Could Not Update Override', error instanceof Error ? error.message : 'Update failed')
+        }
+    }
+
+    const onClearMinigameOverride = async (minigameId: string) => {
+        if (!accessToken) return
+
+        try {
+            openActionDialog('Clearing Minigame Override')
+            const updated = await api.deleteAdminMinigameActivityPointsOverride(accessToken, minigameId)
+            applyMinigamePointsConfig(updated)
+            showActionSuccess('Override Cleared', 'Minigame-specific override removed.')
         } catch (error) {
             showActionError('Could Not Clear Override', error instanceof Error ? error.message : 'Clear failed')
         }
@@ -1283,9 +1363,13 @@ export function AdminPointsPage() {
                                         </article>
                                     ) : (
                                         <article className="admin-flow-card stack border-b border-[#2f2f39] pb-4">
-                                            <h3>Competition Activities</h3>
+                                            <h3>
+                                                {activeActivityManagementTab === 'competitions'
+                                                    ? 'Competition Activities'
+                                                    : 'Minigame Activities'}
+                                            </h3>
                                             <p className="muted tiny">
-                                                These are auto-generated participation activities (codes ending with _PARTICIPATION).
+                                                These are auto-generated participation activities managed by scheduled sync jobs.
                                             </p>
                                         </article>
                                     )}
@@ -1303,6 +1387,15 @@ export function AdminPointsPage() {
                                         <button
                                             type="button"
                                             role="tab"
+                                            aria-selected={activeActivityManagementTab === 'minigames'}
+                                            className={`admin-subtab ${activeActivityManagementTab === 'minigames' ? 'active' : ''}`}
+                                            onClick={() => setActiveActivityManagementTab('minigames')}
+                                        >
+                                            Minigames ({minigameActivities.length})
+                                        </button>
+                                        <button
+                                            type="button"
+                                            role="tab"
                                             aria-selected={activeActivityManagementTab === 'activities'}
                                             className={`admin-subtab ${activeActivityManagementTab === 'activities' ? 'active' : ''}`}
                                             onClick={() => setActiveActivityManagementTab('activities')}
@@ -1312,7 +1405,13 @@ export function AdminPointsPage() {
                                     </div>
 
                                     <article className="table-wrap table-scroll-y admin-flow-card border-b border-[#2f2f39] pb-4">
-                                        <h3>{activeActivityManagementTab === 'competitions' ? 'Competition Activities' : 'Activities'}</h3>
+                                        <h3>
+                                            {activeActivityManagementTab === 'competitions'
+                                                ? 'Competition Activities'
+                                                : activeActivityManagementTab === 'minigames'
+                                                    ? 'Minigame Activities'
+                                                    : 'Activities'}
+                                        </h3>
                                         <input
                                             value={activitySearch}
                                             onChange={(event) => setActivitySearch(event.target.value)}
@@ -1373,6 +1472,8 @@ export function AdminPointsPage() {
                                                         <td colSpan={7} className="muted">
                                                             {activeActivityManagementTab === 'competitions'
                                                                 ? 'No competition activities match this search.'
+                                                                : activeActivityManagementTab === 'minigames'
+                                                                    ? 'No minigame activities match this search.'
                                                                 : 'No activities match this search.'}
                                                         </td>
                                                     </tr>
@@ -1629,6 +1730,94 @@ export function AdminPointsPage() {
                                                 <tr>
                                                     <td colSpan={4} className="muted">
                                                         No competitions found.
+                                                    </td>
+                                                </tr>
+                                            ) : null}
+                                        </tbody>
+                                    </table>
+
+                                    <h3>Minigame Activity Points Configuration</h3>
+                                    <p className="muted tiny">
+                                        These values are consumed by cron sync jobs that create and update minigame participation activities.
+                                    </p>
+
+                                    <form className="actions-row" onSubmit={onUpdateMinigameDefaultPoints}>
+                                        <label style={{ display: 'grid', gap: 6 }}>
+                                            Global default points
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                max={1000}
+                                                value={minigamePointsDefaultInput}
+                                                onChange={(event) => setMinigamePointsDefaultInput(event.target.value)}
+                                                required
+                                            />
+                                        </label>
+                                        <button type="submit">Save Default</button>
+                                    </form>
+
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Minigame</th>
+                                                <th>Current Override</th>
+                                                <th>Set Override</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {(minigamePointsConfig?.overrides || []).map((minigame) => {
+                                                const currentOverride = minigame.points ?? null
+
+                                                return (
+                                                    <tr key={minigame.minigameId}>
+                                                        <td>{minigame.minigameName}</td>
+                                                        <td>{currentOverride === null ? '-' : currentOverride}</td>
+                                                        <td>
+                                                            <input
+                                                                type="number"
+                                                                min={0}
+                                                                max={1000}
+                                                                value={minigameOverrideInputs[minigame.minigameId] || ''}
+                                                                onChange={(event) =>
+                                                                    setMinigameOverrideInputs((prev) => ({
+                                                                        ...prev,
+                                                                        [minigame.minigameId]: event.target.value,
+                                                                    }))
+                                                                }
+                                                                placeholder="Use default"
+                                                            />
+                                                        </td>
+                                                        <td>
+                                                            <div className="actions-row">
+                                                                <button
+                                                                    type="button"
+                                                                    disabled={!minigameOverrideInputs[minigame.minigameId]?.trim()}
+                                                                    onClick={() => {
+                                                                        void onSaveMinigameOverride(minigame.minigameId)
+                                                                    }}
+                                                                >
+                                                                    Save Override
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    className="outline-button"
+                                                                    disabled={currentOverride === null}
+                                                                    onClick={() => {
+                                                                        void onClearMinigameOverride(minigame.minigameId)
+                                                                    }}
+                                                                >
+                                                                    Clear
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )
+                                            })}
+                                            {!minigamePointsConfig?.overrides.length ? (
+                                                <tr>
+                                                    <td colSpan={4} className="muted">
+                                                        No minigames found.
                                                     </td>
                                                 </tr>
                                             ) : null}

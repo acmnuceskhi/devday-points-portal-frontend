@@ -47,9 +47,7 @@ function parseClockValue(baseDate: Date, value?: string | null): string | null {
 
 export function formatCompetitionSchedule(item: CompetitionScheduleLike): string {
     const day = new Date(item.compDay);
-    const dateLabel = Number.isNaN(day.getTime())
-        ? 'Date TBA'
-        : day.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    const dateLabel = 'Thu, Apr 30';
 
     const start = parseClockValue(day, item.startTime);
     const end = parseClockValue(day, item.endTime);

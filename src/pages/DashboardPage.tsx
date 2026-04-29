@@ -30,6 +30,7 @@ export function DashboardPage() {
         setCompetitionsError('');
         const rows = await api.getMyCompetitions(accessToken);
         setCompetitions(rows);
+        console.log('Loaded competitions:', rows);
       } catch (error) {
         setCompetitionsError(error instanceof Error ? error.message : 'Could not load your competitions');
       } finally {
@@ -85,6 +86,8 @@ export function DashboardPage() {
     { label: 'Roll Number', value: participant?.rollNumber },
     { label: 'Minigame Code', value: participant?.minigameCode },
   ];
+
+
 
   return (
     <div className="space-y-6 dashboard-editorial">

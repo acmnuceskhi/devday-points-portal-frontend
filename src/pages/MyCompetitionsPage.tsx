@@ -15,6 +15,13 @@ export function MyCompetitionsPage() {
   const [selectedTeamLoading, setSelectedTeamLoading] = useState(false)
   const [selectedTeamError, setSelectedTeamError] = useState('')
 
+  const getVenueLabel = (item: ParticipantCompetition) => {
+    if (item.venues?.length) return item.venues.map((venue) => venue.name).join(', ')
+    const teamVenue = item.teamVenue?.trim()
+    if (teamVenue && teamVenue.toLowerCase() !== 'notassigned') return teamVenue
+    return item.venueName || 'TBA'
+  }
+
   useEffect(() => {
     async function load() {
       if (!accessToken) {
@@ -100,9 +107,7 @@ export function MyCompetitionsPage() {
                   {item.teamName} {item.isLeader ? '(Leader)' : ''}
                 </p>
                 <p className="mission-venue">
-                  {item.venues?.length
-                    ? item.venues.map((venue) => venue.name).join(', ')
-                    : item.venueName || 'TBA'}
+                  {getVenueLabel(item)}
                 </p>
                 <span className={`competition-status-pill ${item.paymentStatus === 'Paid' ? 'is-verified' : ''}`}>
                   {item.paymentStatus}

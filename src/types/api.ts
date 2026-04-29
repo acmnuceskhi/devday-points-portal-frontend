@@ -73,6 +73,11 @@ export type ParticipantCompetition = {
   compDay: string
   startTime: string
   endTime: string
+  /**
+   * Team-level venue assignment (from backend `Team.venue`).
+   * This is distinct from `venues` / `venueName`, which are competition venue(s).
+   */
+  teamVenue?: string | null
   venueId: string | null
   venueName: string | null
   venues?: Array<{

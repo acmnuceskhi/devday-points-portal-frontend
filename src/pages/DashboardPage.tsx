@@ -19,6 +19,13 @@ export function DashboardPage() {
   const [selectedTeamLoading, setSelectedTeamLoading] = useState(false);
   const [selectedTeamError, setSelectedTeamError] = useState('');
 
+  const getVenueLabel = (item: ParticipantCompetition) => {
+    if (item.venues?.length) return item.venues.map((v) => v.name).join(', ');
+    const teamVenue = item.teamVenue?.trim();
+    if (teamVenue && teamVenue.toLowerCase() !== 'notassigned') return teamVenue;
+    return item.venueName || 'TBA';
+  };
+
   useEffect(() => {
     async function loadCompetitions() {
       if (!accessToken) {
@@ -136,7 +143,7 @@ export function DashboardPage() {
                       {item.teamName} {item.isLeader && <span className="text-yellow-400">(Leader)</span>}
                     </p>
                     <p className="mission-venue">
-                      {item.venues?.length ? item.venues.map((v) => v.name).join(', ') : item.venueName || 'TBA'}
+                      {getVenueLabel(item)}
                     </p>
                     <span className={`competition-status-pill ${item.paymentStatus === 'Paid' ? 'is-verified' : ''}`}>
                       {item.paymentStatus}
@@ -254,7 +261,7 @@ export function DashboardPage() {
                       <div>
                         <p style={{ margin: 0, fontSize: '12px', color: '#d8d8e0' }}>{item.teamName}</p>
                         <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#b8b8c2' }}>
-                          {item.venues?.length ? item.venues.map((v) => v.name).join(', ') : item.venueName || 'TBA'}
+                          {getVenueLabel(item)}
                         </p>
                       </div>
                       <span

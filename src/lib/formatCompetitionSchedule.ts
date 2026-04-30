@@ -35,6 +35,18 @@ function formatTimeInPakistan(dt: Date): string {
     });
 }
 
+function formatTimeFromIso(raw: string, dt: Date): string {
+    // Important: some backend fields are stored as UTC timestamps but represent *Pakistan wall-clock*
+    // times (e.g. "2026-04-30T08:30:00.000Z" should render as 8:30 AM, not 1:30 PM).
+    // If the value explicitly ends with "Z", format in UTC to preserve the wall-clock portion.
+    if (/[zZ]$/.test(raw)) {
+        return dt.toLocaleTimeString(undefined, { timeZone: 'UTC', hour: 'numeric', minute: '2-digit' });
+    }
+
+    // Otherwise, respect the timestamp's offset by formatting in Pakistan time.
+    return formatTimeInPakistan(dt);
+}
+
 function parseClockValue(baseDate: Date, value?: string | null): string | null {
     if (!value) return null;
 
@@ -45,7 +57,7 @@ function parseClockValue(baseDate: Date, value?: string | null): string | null {
     if (raw.includes('T') || raw.includes('Z') || /[+-]\d{2}:?\d{2}$/.test(raw)) {
         const parsed = new Date(raw);
         if (!Number.isNaN(parsed.getTime())) {
-            return formatTimeInPakistan(parsed);
+            return formatTimeFromIso(raw, parsed);
         }
     }
 
